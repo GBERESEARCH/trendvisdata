@@ -3,6 +3,7 @@ Data extraction functions
 
 """
 import datetime as dt
+from io import StringIO
 import norgatedata
 import pandas as pd
 import requests
@@ -248,7 +249,7 @@ class YahooExtract():
         url = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
         req = requests.get(url, timeout=10)
         html_doc = req.text
-        spx_list = pd.read_html(html_doc)
+        spx_list = pd.read_html(StringIO(html_doc))
 
         # the first table on the page contains the stock data
         spx_table = spx_list[0]
@@ -409,7 +410,7 @@ class YahooExtract():
         frame = frame.drop(['Dividends', 'Stock Splits'], axis=1)
 
         # Set Index to Datetime
-        frame.index = pd.to_datetime(frame.index)
+        frame.index = frame.index.tz_localize(None)
 
         # Set the proper length of DataFrame to help filter out missing data
         params = MktUtils.window_set(frame=frame, params=params)
