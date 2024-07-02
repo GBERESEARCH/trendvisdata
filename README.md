@@ -1,4 +1,4 @@
-# trendvisualizer
+# trendvisdata
 ## Calculate trend strength across various markets.
 
 &nbsp;
@@ -8,3 +8,14 @@
   https://norgatedata.com/futurespackage.php).
   - Calculate technical indicators over a range of time periods and aggregate to determine trend strength. 
 
+Used to serve data to Frontend applications & removes dependencies on Python graphing libraries present in the trendvisualizer library.
+
+See the full library for more details:
+
+&nbsp;
+
+* [Trend Visualizer]
+  
+[Trend Visualizer]:<https://github.com/GBERESEARCH/trendvisualizer>
+
+&nbsp;
