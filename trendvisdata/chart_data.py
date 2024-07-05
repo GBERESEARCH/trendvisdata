@@ -54,8 +54,8 @@ class Data():
         return data_dict
 
 
-    @staticmethod
-    def get_bar_data(barometer: pd.DataFrame, params: dict) -> dict:
+    @classmethod
+    def get_bar_data(cls, barometer: pd.DataFrame, params: dict) -> dict:
         """
         Create data dictionary for plotting barchart trends.
 
@@ -72,53 +72,127 @@ class Data():
             Data dictionary for plotting barchart trends.
 
         """
+        # Create default dict to add keys not found
         bar_dict = collections.defaultdict(dict)
         mkts = params['mkts']
 
         # Create entries for up trend
-        barometer_up = barometer.sort_values(by=['Trend Strength %'], ascending=True)
-        bar_dict['up']['short_name'] = list(
-            barometer_up['Short_name'].iloc[-mkts:])
-        bar_dict['up']['trend_strength'] = np.round(
-            np.array(barometer_up['Trend Strength %'].iloc[-mkts:]), 4)
-        bar_dict['up']['trend_color'] = list(
-            barometer_up['Trend Color'].iloc[-mkts:])
-        bar_dict['up']['titlestr'] = 'Up'
-
+        bar_dict = cls._barometer_up(barometer, mkts, bar_dict)
+        
         # Create entries for down trend
-        barometer_down = barometer.sort_values(
-            by=['Trend Strength %'], ascending=False)
-        bar_dict['down']['short_name'] = list(
-            barometer_down['Short_name'].iloc[-mkts:])
-        bar_dict['down']['trend_strength'] = np.round(
-            np.array(barometer_down['Trend Strength %'].iloc[-mkts:]), 4)
-        bar_dict['down']['trend_color'] = list(
-            barometer_down['Trend Color'].iloc[-mkts:])
-        bar_dict['down']['titlestr'] = 'Down'
+        bar_dict = cls._barometer_down(barometer, mkts, bar_dict)
 
         # Create entries for neutral trend
-        barometer_neutral = barometer.sort_values(
-            by=['Absolute Trend Strength %'], ascending=True)
-        bar_dict['neutral']['short_name'] = list(
-            barometer_neutral['Short_name'].iloc[:mkts])
-        bar_dict['neutral']['trend_strength'] = np.round(
-            np.array(barometer_neutral['Trend Strength %'].iloc[:mkts]), 4)
-        bar_dict['neutral']['trend_color'] = list(
-            barometer_neutral['Trend Color'].iloc[:mkts])
-        bar_dict['neutral']['titlestr'] = 'Neutral'
+        bar_dict = cls._barometer_neutral(barometer, mkts, bar_dict)
 
         # Create entries for strong trend
-        bar_dict['strongly']['short_name'] = list(
-            barometer_neutral['Short_name'].iloc[-mkts:])
-        bar_dict['strongly']['trend_strength'] = np.round(
-            np.array(barometer_neutral['Trend Strength %'].iloc[-mkts:]), 4)
-        bar_dict['strongly']['trend_color'] = list(
-            barometer_neutral['Trend Color'].iloc[-mkts:])
-        bar_dict['strongly']['titlestr'] = 'Strongly'
+        bar_dict = cls._barometer_strong(barometer, mkts, bar_dict)
 
+        # Convert back to regular dict
         bar_dict = dict(bar_dict)
 
         return bar_dict
+    
+    
+    @classmethod
+    def _barometer_up(cls, barometer, mkts, bar_dict):
+        # Create entries for up trend
+        barometer_up = barometer.sort_values(
+            by=['Trend Strength %'], ascending=True)
+        short_name = list(barometer_up['Short_name'].iloc[-mkts:])
+        trend_strength = np.round(
+            np.array(barometer_up['Trend Strength %'].iloc[-mkts:]), 4)
+        trend_color = list(barometer_up['Trend Color'].iloc[-mkts:])
+        bar_dict = cls._bar_arrays(
+            bar_dict, short_name, trend_strength, trend_color, direction='up')
+        
+        return bar_dict
+    
+
+    @classmethod
+    def _barometer_down(cls, barometer, mkts, bar_dict):
+        # Create entries for down trend
+        barometer_down = barometer.sort_values(
+            by=['Trend Strength %'], ascending=False)
+        short_name = list(barometer_down['Short_name'].iloc[-mkts:])
+        trend_strength = np.round(
+            np.array(barometer_down['Trend Strength %'].iloc[-mkts:]), 4)
+        trend_color = list(
+            barometer_down['Trend Color'].iloc[-mkts:])
+        bar_dict = cls._bar_arrays(
+            bar_dict, short_name, trend_strength, trend_color, direction='down')
+        
+        return bar_dict
+
+        
+    @classmethod
+    def _barometer_neutral(cls, barometer, mkts, bar_dict):
+        # Create entries for neutral trend
+        barometer_neutral = barometer.sort_values(
+            by=['Absolute Trend Strength %'], ascending=True)
+        short_name = list(barometer_neutral['Short_name'].iloc[:mkts])
+        trend_strength = np.round(
+            np.array(barometer_neutral['Trend Strength %'].iloc[:mkts]), 4)
+        trend_color = list(barometer_neutral['Trend Color'].iloc[:mkts])
+        bar_dict = cls._bar_arrays(
+            bar_dict, short_name, trend_strength, trend_color, direction='neutral')
+        
+        return bar_dict
+
+
+    @classmethod
+    def _barometer_strong(cls, barometer, mkts, bar_dict):
+        # Create entries for strong trend
+        barometer_neutral = barometer.sort_values(
+            by=['Absolute Trend Strength %'], ascending=True)
+        short_name = list(
+            barometer_neutral['Short_name'].iloc[-mkts:])
+        trend_strength = np.round(
+            np.array(barometer_neutral['Trend Strength %'].iloc[-mkts:]), 4)
+        trend_color = list(
+            barometer_neutral['Trend Color'].iloc[-mkts:])
+        bar_dict = cls._bar_arrays(
+            bar_dict, short_name, trend_strength, trend_color, direction='strongly')
+
+        return bar_dict
+
+
+    @classmethod
+    def _bar_arrays(
+        cls,
+        bar_dict, 
+        short_name, 
+        trend_strength, 
+        trend_color, 
+        direction
+        ):
+        bar_dict[direction] = collections.defaultdict(dict)
+        bar_dict[direction]['arrays']['short_name'] = short_name
+        bar_dict[direction]['arrays']['trend_strength'] = trend_strength
+        bar_dict[direction]['arrays']['trend_color'] = trend_color
+        bar_dict[direction]['json'] = cls._json_array(
+            short_name, trend_strength, trend_color)
+        bar_dict[direction]['titlestr'] = direction.capitalize()
+
+        bar_dict[direction] = dict(bar_dict[direction])
+
+        return bar_dict
+
+
+    @staticmethod
+    def _json_array(short_name, trend_strength, trend_color):
+        bar_trim = pd.DataFrame()
+        bar_trim['Short Name'] = short_name
+        bar_trim['Trend Strength'] = trend_strength
+        bar_trim['Trend Color'] = trend_color
+
+        json_dict = bar_trim.to_dict(orient='index')
+
+        json_array = []
+        for key in json_dict.keys():
+            json_array.append(json_dict[key])
+
+        return json_array
     
 
     @classmethod
