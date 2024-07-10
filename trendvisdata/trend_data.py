@@ -2,6 +2,7 @@
 Generate trend strength fields
 
 """
+import copy
 import warnings
 import numpy as np
 import pandas as pd
@@ -99,6 +100,11 @@ class Fields():
                 # Create Average True Range with 14 day timeframe
                 frame = cls._field_atr(
                     params=params, frame=frame, ticker=ticker)
+                
+                # Create column showing the percentage change in closing price since the start 
+                frame = cls._start_change(
+                    params=params, frame=frame, ticker=ticker)
+
 
         return ticker_dict
 
@@ -295,6 +301,26 @@ class Fields():
                       + " consecutive days unchanged price")
 
         return frame
+    
+    @staticmethod
+    def _start_change(
+        params:dict,
+        frame: pd.DataFrame,
+        ticker: str) -> pd.DataFrame:
+
+        try:
+            frame['first_close'] = frame['Close'].iloc[0]
+            frame['start_change'] = frame['Close'] - frame['first_close']
+            frame['start_change_percent'] = frame[
+                'start_change'] / frame['Close'].iloc[0] * 100
+
+
+        except RuntimeWarning:
+            print("Error with "
+                    + ticker
+                    + " percent change")
+
+        return frame
 
 
 
@@ -373,10 +399,23 @@ class Fields():
                           + flag
                           + " from ticker dict")
                     frame.loc[ticker, flag] = 0
+         
+            # Add column of largest change to filter out trending but largely static instruments
+            try:
+                minval = min(dataframe['start_change_percent'])
+                maxval = max(dataframe['start_change_percent'])
+                largest_change = max(abs(minval), maxval)
+                frame.loc[ticker, 'largest_change'] = largest_change
+
+            except KeyError:
+                print("Missing ticker: "
+                        + ticker
+                        + " , largest change")
+                frame.loc[ticker, 'largest_change'] = 0            
 
         # Create trend strength column that sums the trend flags and
         # sort by this column
-        frame['Trend Strength'] = frame.iloc[:,1:].sum(axis=1)
+        frame['Trend Strength'] = frame.iloc[:,1:30].sum(axis=1)
         frame = frame.sort_values(by=['Trend Strength'], ascending=False)
 
         # Create short name column, stripping text from longname
@@ -394,6 +433,9 @@ class Fields():
         # Apply sector mappings
         barometer = cls._barometer_sectors(
             params, barometer, sector_mappings_df)
+        
+        # barometer = cls._barometer_changes(
+        #     barometer, ticker_dict)
 
         return barometer
 
@@ -495,6 +537,28 @@ class Fields():
         return barometer
 
 
+    @staticmethod
+    def _barometer_changes(        
+        barometer: pd.DataFrame,
+        ticker_dict: dict ) -> pd.DataFrame:
+
+        for ticker, dataframe in ticker_dict.items():            
+            # Add column of largest change to filter out trending but largely static instruments
+            try:
+                minval = min(dataframe['start_change_percent'])
+                maxval = max(dataframe['start_change_percent'])
+                largest_change = max(abs(minval), maxval)
+                barometer.loc[ticker, 'largest_change'] = largest_change
+
+            except KeyError:
+                print("Missing ticker: "
+                        + ticker
+                        + " , largest change")
+                barometer.loc[ticker, 'largest_change'] = 0
+
+        return barometer
+
+
 class TrendRank():
     """
     Generate list of strongly trending securities
@@ -523,21 +587,47 @@ class TrendRank():
             futures_barometer.
 
         """
+        barometer = copy.deepcopy(tables['barometer'])
+
         # Select backadjusted futures
         if params['tickers_adjusted']:
             tables['futures_ticker_dict'] = {
                 k:v for k,v in tables['raw_ticker_dict'].items()
                 if '_ccb' in k}
-            tables['futures_barometer'] = tables['barometer'][
-                tables['barometer']['Ticker'].str.lower().str.contains('_ccb')]
+            tables['futures_barometer'] = barometer[
+                barometer['Ticker'].str.lower().str.contains('_ccb')]
 
         # Select unadjusted futures
         else:
             tables['futures_ticker_dict'] = {
                 k:v for k,v in tables['raw_ticker_dict'].items()
                 if k.startswith('c_')}
-            tables['futures_barometer'] = tables['barometer'][
-                tables['barometer']['Ticker'].str.lower().str.startswith('c_')]
+            tables['futures_barometer'] = barometer[
+                barometer['Ticker'].str.lower().str.startswith('c_')]
+
+        return tables
+
+
+    @staticmethod
+    def sector_split(tables: dict) -> dict:
+
+        barometer = copy.deepcopy(tables['barometer'])
+        sectors = set(barometer['Mid Sector'])
+
+        tables['sectors'] = {}
+        for sector in sectors:
+
+            tables['sectors'][sector] = tables[
+                'barometer'].loc[barometer['Mid Sector'] == sector]
+
+        return tables
+
+
+    @staticmethod
+    def return_filter(tables: dict) -> dict:
+
+        barometer = copy.deepcopy(tables['barometer'])
+        tables['return_barometer'] = barometer.loc[barometer['largest_change'] > 5]
 
         return tables
 
@@ -574,6 +664,9 @@ class TrendRank():
 
         tables['filtered_barometer'] = cls._filter_barometer(
             tables, params)
+        
+        tables = cls.sector_split(tables)
+        tables = cls.return_filter(tables)
 
         top_trends['top_ticker_dict'] = {}
         top_trends['top_ticker_list'] = []
@@ -620,9 +713,9 @@ class TrendRank():
         if params['source'] == 'norgate':
             # Split the continuous futures data
             tables = cls.futures_split(tables=tables, params=params)
-            barometer = tables['futures_barometer']
+            barometer = copy.deepcopy(tables['futures_barometer'])
         else:
-            barometer = tables['barometer']
+            barometer = copy.deepcopy(tables['barometer'])
 
         data = barometer.sort_values(
             by=['Absolute Trend Strength'],

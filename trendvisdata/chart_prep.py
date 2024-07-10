@@ -146,7 +146,8 @@ class Formatting():
     def create_normalized_data(
         cls,
         params: dict,
-        tables: dict) -> pd.DataFrame:
+        tables: dict,
+        flag: str) -> pd.DataFrame:
         """
         Create a subset of chart_prep dataset normalized to start from
         100 for the specified history window
@@ -178,7 +179,11 @@ class Formatting():
 
         """
 
-        chart_data = cls._create_chart_data(params=params, tables=tables)
+        chart_data = cls._create_chart_data(
+            params=params, 
+            tables=tables,
+            flag=flag
+            )
 
         # Copy the selected number of days history from the input
         # DataFrame
@@ -196,7 +201,8 @@ class Formatting():
     def _create_chart_data(
         cls,
         params: dict,
-        tables: dict) -> pd.DataFrame:
+        tables: dict,
+        flag: str) -> pd.DataFrame:
         """
         Create a time series of closing prices for selected markets.
 
@@ -224,10 +230,16 @@ class Formatting():
             strength.
 
         """
+        if flag == 'norm':
+            table = tables['barometer']
+        elif flag == 'high':
+            table = tables['return_barometer']
+        else:
+            table = tables['sectors'][flag]
 
         data_list = cls.create_data_list(
             params, 
-            tables['barometer'], 
+            table, 
             market_chart=False, 
             num_charts=None
             )

@@ -1,3 +1,4 @@
+import datetime as dt
 import numpy as np
 import pandas as pd
 import collections
@@ -43,11 +44,37 @@ class Data():
             Data dictionary for graphing of barchart, returns and market charts.
 
         """
+        start = dt.datetime.strptime(params['start_date'], "%Y-%m-%d").date()
+        end = dt.datetime.strptime(params['end_date'], "%Y-%m-%d").date()
+
         data_dict = {}
         barometer = tables['barometer']
         data_dict['bar_dict'] = cls.get_bar_data(barometer=barometer, params=params)
-        data_dict['returns_dict'] = cls.get_returns_data(
-            params=params, tables=tables)
+        data_dict['returns_dict'] = {}
+        data_dict['returns_dict']['norm_dict'] = cls.get_returns_data(
+            params=params, tables=tables, flag='norm')
+        
+        data_dict['returns_dict']['high_returns_dict'] = cls.get_returns_data(
+            params=params, tables=tables, flag='high')
+        
+        sectors = list(set(tables['barometer']['Mid Sector']))
+        data_dict['returns_dict']['sectors'] = {}
+        for sector in sectors:
+            data_dict['returns_dict']['sectors'][sector] = cls.get_returns_data(
+                params=params, tables=tables, flag=sector)
+            data_dict['returns_dict']['sectors'][sector]['sector'] = sector
+            data_dict['returns_dict']['sectors'][sector]['title'] = (
+                sector +
+                " : " +
+                start.strftime("%B") + 
+                " " + 
+                str(start.year) + 
+                " - " + 
+                end.strftime("%B") + 
+                " " + 
+                str(end.year)
+                )
+        
         data_dict['market_dict'] = cls.get_market_chart_data(
             params=params, tables=tables)
         
@@ -196,7 +223,11 @@ class Data():
     
 
     @classmethod
-    def get_returns_data(cls, params: dict, tables: dict) -> dict:        
+    def get_returns_data(
+        cls, 
+        params: dict, 
+        tables: dict, 
+        flag: str) -> dict:        
         """
         Create data dictionary for plotting line graph trends.
 
@@ -226,7 +257,11 @@ class Data():
 
         """
         # Generate DataFrame of normalized returns
-        tenor = Formatting.create_normalized_data(params=params, tables=tables)
+        tenor = Formatting.create_normalized_data(
+            params=params, 
+            tables=tables,
+            flag=flag
+            )
         #tenor.index = tenor.index.astype(pd.DatetimeIndex)
         tenor.index = tenor.index.date.astype(str) # type: ignore comment;
 
