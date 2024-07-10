@@ -25,7 +25,7 @@ sectmap = {
         '&EH_CCB':('Commodities', 'Energy', 'Petroleum', 'Petroleum', 'Ethanol'), # Ethanol
         '&EMD_CCB':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'S&P MidCap 400 E-mini'), # S&P MidCap 400 E-mini
         '&ES_CCB':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'S&P 500 E-mini'), # S&P 500 E-mini
-        '&ETH_CCB':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Ether'), # Ether
+        '&ETH_CCB':('Currencies', 'Crypto Currencies', 'Crypto Currencies', 'Crypto Currencies', 'Ether'), # Ether
         '&EUA_CCB':('Commodities', 'Energy', 'Energy', 'Energy', 'EUA (Carbon Emissions)'), # EUA (Carbon Emissions)
         '&FBTP_CCB':('Bonds','Government Bonds','Government Bonds','Government Bonds', 'Euro-BTP Long Term'), # Euro-BTP Long Term
         '&FCE_CCB':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'CAC 40'), # CAC 40
@@ -70,9 +70,9 @@ sectmap = {
         '&LSU_CCB':('Commodities','Diversified Agriculture', 'Agriculture', 'Softs', 'White Sugar'), # White Sugar
         '&LWB_CCB':('Commodities','Diversified Agriculture', 'Agriculture', 'Grains', 'Feed Wheat'), # Feed Wheat
         '&M2K_CCB':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Micro Russell 2000 E-mini'), # Micro Russell 2000 E-mini
-        '&MBT_CCB':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Micro Bitcoin E-mini'), # Micro Bitcoin E-mini
+        '&MBT_CCB':('Currencies', 'Crypto Currencies', 'Crypto Currencies', 'Crypto Currencies', 'Micro Bitcoin E-mini'), # Micro Bitcoin E-mini
         '&MES_CCB':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Micro S&P 500 E-mini'), # Micro S&P 500 E-mini
-        '&MET_CCB':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Micro Ether E-mini'), # Micro Ether E-mini
+        '&MET_CCB':('Currencies', 'Crypto Currencies', 'Crypto Currencies', 'Crypto Currencies', 'Micro Ether E-mini'), # Micro Ether E-mini
         '&MYM_CCB':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Micro DJIA E-mini'), # Micro DJIA E-mini
         '&MNQ_CCB':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Micro Nasdaq-100 E-mini'), # Micro Nasdaq-100 E-mini
         '&MHI_CCB':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Hang Seng Index'), # Hang Seng Index - Mini
@@ -148,7 +148,7 @@ sectmap = {
         '&DC':('Commodities','Diversified Agriculture', 'Agriculture', 'Softs', 'Milk - Class III'), # Milk - Class III
         '&DX':('Currencies', 'G10 Currencies', 'G10 Currencies', 'G10 Currencies', 'Benchmark'), # US Dollar Index
         '&EH':('Commodities', 'Energy', 'Petroleum', 'Petroleum', 'Ethanol'), # Ethanol
-        '&ETH':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Ether'), # Ether
+        '&ETH':('Currencies', 'Crypto Currencies', 'Crypto Currencies', 'Crypto Currencies', 'Ether'), # Ether
         '&EMD':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'S&P MidCap 400 E-mini'), # S&P MidCap 400 E-mini
         '&ES':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'S&P 500 E-mini'), # S&P 500 E-mini
         '&EUA':('Commodities', 'Energy', 'Energy', 'Energy', 'EUA (Carbon Emissions)'), # EUA (Carbon Emissions)
@@ -195,9 +195,9 @@ sectmap = {
         '&LSU':('Commodities','Diversified Agriculture', 'Agriculture', 'Softs', 'White Sugar'), # White Sugar
         '&LWB':('Commodities','Diversified Agriculture', 'Agriculture', 'Grains', 'Feed Wheat'), # Feed Wheat
         '&M2K':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Micro Russell 2000 E-mini'), # Micro Russell 2000 E-mini
-        '&MBT':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Micro Bitcoin E-mini'), # Micro Bitcoin E-mini
+        '&MBT':('Currencies', 'Crypto Currencies', 'Crypto Currencies', 'Crypto Currencies', 'Micro Bitcoin E-mini'), # Micro Bitcoin E-mini
         '&MES':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Micro S&P 500 E-mini'), # Micro S&P 500 E-mini
-        '&MET':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Micro Ether E-mini'), # Micro Ether E-mini
+        '&MET':('Currencies', 'Crypto Currencies', 'Crypto Currencies', 'Crypto Currencies', 'Micro Ether E-mini'), # Micro Ether E-mini
         '&MHI':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Hang Seng Index'), # Hang Seng Index - Mini
         '&MNQ':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Micro Nasdaq-100 E-mini'), # Micro Nasdaq-100 E-mini
         '&MWE':('Commodities','Diversified Agriculture', 'Agriculture', 'Grains', 'Hard Red Spring Wheat'), # Hard Red Spring Wheat
