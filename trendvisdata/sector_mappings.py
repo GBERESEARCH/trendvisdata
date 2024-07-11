@@ -37,8 +37,8 @@ sectmap = {
         '&FGBM_CCB':('Bonds','Government Bonds','Government Bonds','Government Bonds', 'Euro-Bobl - 5 Yr'), # Euro-Bobl - 5 Yr
         '&FGBS_CCB':('Bonds','Government Bonds','Government Bonds','Government Bonds', 'Euro-Schatz - 2 Yr'), # Euro-Schatz - 2 Yr
         '&FGBX_CCB':('Bonds','Government Bonds','Government Bonds','Government Bonds', 'Euro-Buxl - 30 Yr'), # Euro-Buxl - 30 Yr
-        '&FOAT_CCB':('Interest Rates', 'Interest Rates', 'Interest Rates', 'Interest Rates', 'Euro-OAT Continuous Contract'), # Euro-OAT
-        '&FOAT9_CCB':('Interest Rates', 'Interest Rates', 'Interest Rates', 'Interest Rates', 'Euro-OAT(L) Continuous Contract'), # Euro-OAT(L)
+        '&FOAT_CCB':('Bonds','Government Bonds','Government Bonds','Government Bonds', 'Euro-OAT Continuous Contract'), # Euro-OAT
+        '&FOAT9_CCB':('Bonds','Government Bonds','Government Bonds','Government Bonds', 'Euro-OAT(L) Continuous Contract'), # Euro-OAT(L)
         '&FSMI_CCB':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Swiss Market Index'), # Swiss Market Index
         '&FTDX_CCB':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'TecDAX'), # TecDAX
         '&GAS_CCB':('Commodities', 'Energy', 'Energy', 'Energy', 'Gas Oil'), # Gas Oil
@@ -162,8 +162,8 @@ sectmap = {
         '&FGBM':('Bonds','Government Bonds','Government Bonds','Government Bonds', 'Euro-Bobl - 5 Yr'), # Euro-Bobl - 5 Yr
         '&FGBS':('Bonds','Government Bonds','Government Bonds','Government Bonds', 'Euro-Schatz - 2 Yr'), # Euro-Schatz - 2 Yr
         '&FGBX':('Bonds','Government Bonds','Government Bonds','Government Bonds', 'Euro-Buxl - 30 Yr'), # Euro-Buxl - 30 Yr
-        '&FOAT':('Interest Rates', 'Interest Rates', 'Interest Rates', 'Interest Rates', 'Euro-OAT Continuous Contract'), # Euro-OAT Continuous Contract
-        '&FOAT9':('Interest Rates', 'Interest Rates', 'Interest Rates', 'Interest Rates', 'Euro-OAT(L) Continuous Contract'), # Euro-OAT(L) Continuous Contract
+        '&FOAT':('Bonds','Government Bonds','Government Bonds','Government Bonds', 'Euro-OAT Continuous Contract'), # Euro-OAT Continuous Contract
+        '&FOAT9':('Bonds','Government Bonds','Government Bonds','Government Bonds', 'Euro-OAT(L) Continuous Contract'), # Euro-OAT(L) Continuous Contract
         '&FSMI':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Swiss Market Index'), # Swiss Market Index
         '&FTDX':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'TecDAX'), # TecDAX
         '&GAS':('Commodities', 'Energy', 'Energy', 'Energy', 'Gas Oil'), # Gas Oil

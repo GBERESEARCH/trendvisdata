@@ -44,37 +44,31 @@ class Data():
             Data dictionary for graphing of barchart, returns and market charts.
 
         """
-        start = dt.datetime.strptime(params['start_date'], "%Y-%m-%d").date()
-        end = dt.datetime.strptime(params['end_date'], "%Y-%m-%d").date()
+        #start = dt.datetime.strptime(params['start_date'], "%Y-%m-%d").date()
+        #end = dt.datetime.strptime(params['end_date'], "%Y-%m-%d").date()
 
         data_dict = {}
         barometer = tables['barometer']
         data_dict['bar_dict'] = cls.get_bar_data(barometer=barometer, params=params)
         data_dict['returns_dict'] = {}
-        data_dict['returns_dict']['norm_dict'] = cls.get_returns_data(
-            params=params, tables=tables, flag='norm')
+        data_dict['returns_dict']['unfiltered_dict'] = cls.get_returns_data(
+            params=params, tables=tables, flag='Unfiltered')
         
         data_dict['returns_dict']['high_returns_dict'] = cls.get_returns_data(
-            params=params, tables=tables, flag='high')
+            params=params, tables=tables, flag='High Returns')
         
-        sectors = list(set(tables['barometer']['Mid Sector']))
+        if params['source'] == 'norgate':
+            sectors = list(set(tables['barometer']['Mid Sector']))
+        else:
+            sectors = list(set(tables['barometer']['Industry']))
         data_dict['returns_dict']['sectors'] = {}
         for sector in sectors:
-            data_dict['returns_dict']['sectors'][sector] = cls.get_returns_data(
+            returns_data = cls.get_returns_data(
                 params=params, tables=tables, flag=sector)
-            data_dict['returns_dict']['sectors'][sector]['sector'] = sector
-            data_dict['returns_dict']['sectors'][sector]['title'] = (
-                sector +
-                " : " +
-                start.strftime("%B") + 
-                " " + 
-                str(start.year) + 
-                " - " + 
-                end.strftime("%B") + 
-                " " + 
-                str(end.year)
-                )
-        
+            if (returns_data['title'] != 'Error'): 
+                data_dict['returns_dict']['sectors'][sector] = returns_data
+                data_dict['returns_dict']['sectors'][sector]['sector'] = sector
+                    
         data_dict['market_dict'] = cls.get_market_chart_data(
             params=params, tables=tables)
         
@@ -262,32 +256,52 @@ class Data():
             tables=tables,
             flag=flag
             )
-        #tenor.index = tenor.index.astype(pd.DatetimeIndex)
-        tenor.index = tenor.index.date.astype(str) # type: ignore comment;
-
-        # Create empty returns dict & add returns and labels
         returns_dict = {}
-        returns_dict['time_series'] = {}
-        for num, label in enumerate(tenor.columns):
-            returns_dict['time_series'][num] = {}
-            returns_dict['time_series'][num]['label'] = label
-            returns_dict['time_series'][num]['data'] = tenor[label].to_dict()
+        try:
+            #tenor.index = tenor.index.astype(pd.DatetimeIndex)
+            tenor.index = tenor.index.date.astype(str) # type: ignore comment;
 
-        returns_dict['time_series'] = cls._round_floats(
-            returns_dict['time_series']
-            )
-        returns_dict['xlabel'] = 'Date'
-        returns_dict['ylabel'] = 'Return %'
-        returns_dict['line_labels'] = tenor.columns.to_list()
-        returns_dict['chart_title'] = (
-            'Relative Return Over Last ' +
-            str(len(tenor)) +
-            ' Trading Days' +
-            ' - ' +
-            params['end_date']
-            )
+            # Create empty returns dict & add returns and labels            
+            returns_dict['time_series'] = {}
+            for num, label in enumerate(tenor.columns):
+                returns_dict['time_series'][num] = {}
+                returns_dict['time_series'][num]['label'] = label
+                returns_dict['time_series'][num]['data'] = tenor[label].to_dict()
 
-        return returns_dict
+            returns_dict['time_series'] = cls._round_floats(
+                returns_dict['time_series']
+                )
+            returns_dict['start'] = dt.datetime.strptime(
+                tenor.index[0], "%Y-%m-%d").date()
+            returns_dict['end'] = dt.datetime.strptime(
+                tenor.index[-1], "%Y-%m-%d").date()
+            returns_dict['xlabel'] = 'Date'
+            returns_dict['ylabel'] = 'Return %'
+            returns_dict['line_labels'] = tenor.columns.to_list()
+            returns_dict['chart_title'] = (
+                'Relative Return Over Last ' +
+                str(len(tenor)) +
+                ' Trading Days' +
+                ' - ' +
+                params['end_date']
+                )
+            returns_dict['title'] = (
+                    flag +
+                    " : " +
+                    returns_dict['start'].strftime("%B") + 
+                    " " + 
+                    str(returns_dict['start'].year) + 
+                    " - " + 
+                    returns_dict['end'].strftime("%B") + 
+                    " " + 
+                    str(returns_dict['end'].year)
+                    )
+            
+            return returns_dict
+
+        except AttributeError:
+            returns_dict['title'] = 'Error'
+            return returns_dict
     
 
     @classmethod

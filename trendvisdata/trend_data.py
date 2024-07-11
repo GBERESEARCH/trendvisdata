@@ -564,74 +564,6 @@ class TrendRank():
     Generate list of strongly trending securities
 
     """
-
-    @staticmethod
-    def futures_split(
-        tables: dict,
-        params: dict) -> dict:
-        """
-        Split the futures from the rest of the norgate data (choosing
-        backadjusted data or not)
-
-        Parameters
-        ----------
-        tables : Dict
-            Dictionary of key tables.
-        params : Dict
-            Dictionary of key parameters
-
-        Returns
-        -------
-        tables : Dict
-            Dictionary of key tables updated for futures_ticker_dict and
-            futures_barometer.
-
-        """
-        barometer = copy.deepcopy(tables['barometer'])
-
-        # Select backadjusted futures
-        if params['tickers_adjusted']:
-            tables['futures_ticker_dict'] = {
-                k:v for k,v in tables['raw_ticker_dict'].items()
-                if '_ccb' in k}
-            tables['futures_barometer'] = barometer[
-                barometer['Ticker'].str.lower().str.contains('_ccb')]
-
-        # Select unadjusted futures
-        else:
-            tables['futures_ticker_dict'] = {
-                k:v for k,v in tables['raw_ticker_dict'].items()
-                if k.startswith('c_')}
-            tables['futures_barometer'] = barometer[
-                barometer['Ticker'].str.lower().str.startswith('c_')]
-
-        return tables
-
-
-    @staticmethod
-    def sector_split(tables: dict) -> dict:
-
-        barometer = copy.deepcopy(tables['barometer'])
-        sectors = set(barometer['Mid Sector'])
-
-        tables['sectors'] = {}
-        for sector in sectors:
-
-            tables['sectors'][sector] = tables[
-                'barometer'].loc[barometer['Mid Sector'] == sector]
-
-        return tables
-
-
-    @staticmethod
-    def return_filter(tables: dict) -> dict:
-
-        barometer = copy.deepcopy(tables['barometer'])
-        tables['return_barometer'] = barometer.loc[barometer['largest_change'] > 5]
-
-        return tables
-
-
     @classmethod
     def top_trend_calc(
         cls,
@@ -665,8 +597,8 @@ class TrendRank():
         tables['filtered_barometer'] = cls._filter_barometer(
             tables, params)
         
-        tables = cls.sector_split(tables)
-        tables = cls.return_filter(tables)
+        tables = cls._sector_split(tables, params)
+        tables = cls._return_filter(tables)
 
         top_trends['top_ticker_dict'] = {}
         top_trends['top_ticker_list'] = []
@@ -712,7 +644,7 @@ class TrendRank():
         """
         if params['source'] == 'norgate':
             # Split the continuous futures data
-            tables = cls.futures_split(tables=tables, params=params)
+            tables = cls._futures_split(tables=tables, params=params)
             barometer = copy.deepcopy(tables['futures_barometer'])
         else:
             barometer = copy.deepcopy(tables['barometer'])
@@ -755,3 +687,77 @@ class TrendRank():
             ascending=False).reset_index().drop(['index'], axis=1)
 
         return filtered_barometer
+
+
+    @staticmethod
+    def _futures_split(
+        tables: dict,
+        params: dict) -> dict:
+        """
+        Split the futures from the rest of the norgate data (choosing
+        backadjusted data or not)
+
+        Parameters
+        ----------
+        tables : Dict
+            Dictionary of key tables.
+        params : Dict
+            Dictionary of key parameters
+
+        Returns
+        -------
+        tables : Dict
+            Dictionary of key tables updated for futures_ticker_dict and
+            futures_barometer.
+
+        """
+        barometer = copy.deepcopy(tables['barometer'])
+
+        # Select backadjusted futures
+        if params['tickers_adjusted']:
+            tables['futures_ticker_dict'] = {
+                k:v for k,v in tables['raw_ticker_dict'].items()
+                if '_ccb' in k}
+            tables['futures_barometer'] = barometer[
+                barometer['Ticker'].str.lower().str.contains('_ccb')]
+
+        # Select unadjusted futures
+        else:
+            tables['futures_ticker_dict'] = {
+                k:v for k,v in tables['raw_ticker_dict'].items()
+                if k.startswith('c_')}
+            tables['futures_barometer'] = barometer[
+                barometer['Ticker'].str.lower().str.startswith('c_')]
+
+        return tables
+
+
+    @staticmethod
+    def _sector_split(tables: dict, params: dict) -> dict:
+
+        barometer = copy.deepcopy(tables['barometer'])
+
+        tables['sectors'] = {}
+
+        if params['source'] == 'norgate':
+            sectors = set(barometer['Mid Sector'])
+            for sector in sectors:
+                tables['sectors'][sector] = tables[
+                    'barometer'].loc[barometer['Mid Sector'] == sector]
+        else:
+            sectors = set(barometer['Industry'])
+            for sector in sectors:
+                tables['sectors'][sector] = tables[
+                    'barometer'].loc[barometer['Industry'] == sector]
+
+        return tables
+
+
+    @staticmethod
+    def _return_filter(tables: dict) -> dict:
+
+        barometer = copy.deepcopy(tables['barometer'])
+        tables['return_barometer'] = barometer.loc[barometer['largest_change'] > 5]
+
+        return tables
+    

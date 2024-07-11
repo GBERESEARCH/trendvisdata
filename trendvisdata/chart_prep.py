@@ -230,9 +230,9 @@ class Formatting():
             strength.
 
         """
-        if flag == 'norm':
+        if flag == 'Unfiltered':
             table = tables['barometer']
-        elif flag == 'high':
+        elif flag == 'High Returns':
             table = tables['return_barometer']
         else:
             table = tables['sectors'][flag]
