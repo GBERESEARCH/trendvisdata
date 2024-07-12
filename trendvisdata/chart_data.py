@@ -49,6 +49,7 @@ class Data():
 
         data_dict = {}
         barometer = tables['barometer']
+        
         data_dict['bar_dict'] = cls.get_bar_data(barometer=barometer, params=params)
         data_dict['returns_dict'] = {}
         data_dict['returns_dict']['unfiltered_dict'] = cls.get_returns_data(
@@ -58,9 +59,11 @@ class Data():
             params=params, tables=tables, flag='High Returns')
         
         if params['source'] == 'norgate':
-            sectors = list(set(tables['barometer']['Mid Sector']))
+            sectors = list(set(
+                tables['barometer'][params['returns_sector_name']]))
         else:
-            sectors = list(set(tables['barometer']['Industry']))
+            sectors = list(set(
+                tables['barometer'][params['returns_sector_name']]))
         data_dict['returns_dict']['sectors'] = {}
         for sector in sectors:
             returns_data = cls.get_returns_data(

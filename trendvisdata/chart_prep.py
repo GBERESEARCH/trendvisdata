@@ -496,7 +496,7 @@ class Formatting():
         Parameters
         ----------
         params : Dict
-            sector_level : Int, optional
+            sector_level / returns_sector_level : Int, optional
                 The level of granularity of the assets.
                 For Commodities the choices are:
                     1:'Asset Class',
@@ -539,6 +539,8 @@ class Formatting():
         if params['asset_type'] == 'CTA':
             params['sector_name'] = params[
                 'commodity_sector_levels'][params['sector_level']-1]
+            params['returns_sector_name'] = params[
+                'commodity_sector_levels'][params['returns_sector_level']-1]
             params['marker_size'] = 10
 
             # 'all' is used to select all of the Norgate data types
@@ -573,6 +575,8 @@ class Formatting():
         else:
             params['sector_name'] = params[
                 'equity_sector_levels'][params['sector_level']-1]
+            params['returns_sector_name'] = params[
+                'equity_sector_levels'][params['returns_sector_level']-1]
             params['marker_size'] = 10
             chart_barometer = barometer
 

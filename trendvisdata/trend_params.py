@@ -177,6 +177,7 @@ trend_params_dict = {
             },
 
         'sector_level':2,
+        'returns_sector_level':2,
         'absolute':True,
         'summary_type':'swarm',
         'graph_ticker_types':['c', 's'],

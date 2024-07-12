@@ -594,6 +594,9 @@ class TrendRank():
         """
         top_trends = {}
 
+        # Configure sector name
+        params = cls._set_sector_level_name(params)
+
         tables['filtered_barometer'] = cls._filter_barometer(
             tables, params)
         
@@ -619,6 +622,23 @@ class TrendRank():
                 top_trends['top_ticker_list'].append(ticker)
 
         return top_trends, tables
+
+
+    @staticmethod
+    def _set_sector_level_name(params):
+        if params['source'] == 'norgate':
+            params['sector_name'] = params[
+                'commodity_sector_levels'][params['sector_level']-1]
+            params['returns_sector_name'] = params[
+                'commodity_sector_levels'][params['returns_sector_level']-1]
+        # Otherwise for Yahoo SPX data
+        else:
+            params['sector_name'] = params[
+                'equity_sector_levels'][params['sector_level']-1]
+            params['returns_sector_name'] = params[
+                'equity_sector_levels'][params['returns_sector_level']-1]
+            
+        return params    
 
 
     @classmethod
@@ -738,17 +758,13 @@ class TrendRank():
         barometer = copy.deepcopy(tables['barometer'])
 
         tables['sectors'] = {}
+        sector_level = params['returns_sector_name']
 
-        if params['source'] == 'norgate':
-            sectors = set(barometer['Mid Sector'])
-            for sector in sectors:
-                tables['sectors'][sector] = tables[
-                    'barometer'].loc[barometer['Mid Sector'] == sector]
-        else:
-            sectors = set(barometer['Industry'])
-            for sector in sectors:
-                tables['sectors'][sector] = tables[
-                    'barometer'].loc[barometer['Industry'] == sector]
+        sectors = set(barometer[sector_level])
+
+        for sector in sectors:
+            tables['sectors'][sector] = tables[
+                'barometer'].loc[barometer[sector_level] == sector]
 
         return tables
 
