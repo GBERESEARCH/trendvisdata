@@ -203,6 +203,12 @@ class Fields():
                       + " : More than "
                       + str(tenor)
                       + " consecutive days unchanged price")
+                
+            except IndexError:
+                print("Error with "
+                      + ticker
+                      + " ADX_"+str(tenor)
+                      + " Problem with EMA calculation")    
 
         return frame
 
