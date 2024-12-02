@@ -254,11 +254,15 @@ class Data():
 
         """
         # Generate DataFrame of normalized returns
-        tenor = Formatting.create_normalized_data(
+        raw_tenor = Formatting.create_normalized_data(
             params=params, 
             tables=tables,
             flag=flag
             )
+        
+        # Drop any columns containing nan values
+        tenor = raw_tenor.dropna(axis=1)
+
         returns_dict = {}
         try:
             #tenor.index = tenor.index.astype(pd.DatetimeIndex)
