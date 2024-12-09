@@ -254,7 +254,7 @@ class Data():
 
         """
         # Generate DataFrame of normalized returns
-        raw_tenor = Formatting.create_normalized_data(
+        raw_tenor, raw_chart_data = Formatting.create_normalized_data(
             params=params, 
             tables=tables,
             flag=flag
@@ -262,22 +262,27 @@ class Data():
         
         # Drop any columns containing nan values
         tenor = raw_tenor.dropna(axis=1)
+        chart_data = raw_chart_data.dropna(axis=1)
 
         returns_dict = {}
         try:
             #tenor.index = tenor.index.astype(pd.DatetimeIndex)
             tenor.index = tenor.index.date.astype(str) # type: ignore comment;
+            chart_data.index = chart_data.index.date.astype(str) # type: ignore comment;
 
             # Create empty returns dict & add returns and labels            
             returns_dict['time_series'] = {}
             for num, label in enumerate(tenor.columns):
                 returns_dict['time_series'][num] = {}
                 returns_dict['time_series'][num]['label'] = label
-                returns_dict['time_series'][num]['data'] = tenor[label].to_dict()
-
-            returns_dict['time_series'] = cls._round_floats(
-                returns_dict['time_series']
-                )
+                returns_dict['time_series'][num][
+                    'data'] = tenor[label].to_dict()
+                returns_dict['time_series'][num][
+                    'data'] = cls._round_floats(
+                        returns_dict['time_series'][num]['data'])
+                returns_dict['time_series'][num][
+                    'price_data'] = chart_data[label].to_dict()
+                
             returns_dict['start'] = dt.datetime.strptime(
                 tenor.index[0], "%Y-%m-%d").date()
             returns_dict['end'] = dt.datetime.strptime(

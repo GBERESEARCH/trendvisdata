@@ -147,7 +147,7 @@ class Formatting():
         cls,
         params: dict,
         tables: dict,
-        flag: str) -> pd.DataFrame:
+        flag: str) -> tuple[pd.DataFrame, pd.DataFrame]:
         """
         Create a subset of chart_prep dataset normalized to start from
         100 for the specified history window
@@ -194,7 +194,7 @@ class Formatting():
         for ticker in tenor.columns:
             tenor[ticker] = tenor[ticker].div(tenor[ticker].iloc[0]).mul(100)
 
-        return tenor
+        return tenor, chart_data
 
 
     @classmethod
