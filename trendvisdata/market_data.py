@@ -257,6 +257,9 @@ class YahooExtract():
         # create a list of the tickers from the 'Symbol' column
         params['tickers'] = list(spx_table['Symbol'])
 
+        # Rename 'Company' to 'Security' column
+        spx_table = spx_table.rename(columns={'Company': 'Security'})
+
         # create a dictionary mapping ticker to Security Name
         params['ticker_name_dict'] = dict(
             zip(spx_table['Symbol'], spx_table['Security']))
