@@ -138,6 +138,7 @@ trend_params_dict = {
         'chart_dimensions':(8, 5),
         'lookback':500,
         'ticker_limit':None,
+        'sig_figs':5,
         'market_chart':False,
         'indicator_name_dict':{
             'adx':('ADX', 'ADX'),

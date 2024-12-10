@@ -1,4 +1,5 @@
 import datetime as dt
+from math import log10, floor
 import numpy as np
 import pandas as pd
 import collections
@@ -280,8 +281,11 @@ class Data():
                 returns_dict['time_series'][num][
                     'data'] = cls._round_floats(
                         returns_dict['time_series'][num]['data'])
+                price_data = chart_data[label].apply(
+                    lambda x: round(x, params['sig_figs'] - int(
+                         floor(log10(abs(x)))) - 1))
                 returns_dict['time_series'][num][
-                    'price_data'] = chart_data[label].to_dict()
+                    'price_data'] = price_data.to_dict()
                 
             returns_dict['start'] = dt.datetime.strptime(
                 tenor.index[0], "%Y-%m-%d").date()
