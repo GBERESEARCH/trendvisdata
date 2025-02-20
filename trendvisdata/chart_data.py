@@ -274,18 +274,21 @@ class Data():
             # Create empty returns dict & add returns and labels            
             returns_dict['time_series'] = {}
             for num, label in enumerate(tenor.columns):
-                returns_dict['time_series'][num] = {}
-                returns_dict['time_series'][num]['label'] = label
-                returns_dict['time_series'][num][
-                    'data'] = tenor[label].to_dict()
-                returns_dict['time_series'][num][
-                    'data'] = cls._round_floats(
-                        returns_dict['time_series'][num]['data'])
-                price_data = chart_data[label].apply(
-                    lambda x: round(x, params['sig_figs'] - int(
-                         floor(log10(abs(x)))) - 1))
-                returns_dict['time_series'][num][
-                    'price_data'] = price_data.to_dict()
+                try:
+                    returns_dict['time_series'][num] = {}
+                    returns_dict['time_series'][num]['label'] = label
+                    returns_dict['time_series'][num][
+                        'data'] = tenor[label].to_dict()
+                    returns_dict['time_series'][num][
+                        'data'] = cls._round_floats(
+                            returns_dict['time_series'][num]['data'])
+                    price_data = chart_data[label].apply(
+                        lambda x: round(x, params['sig_figs'] - int(
+                                floor(log10(abs(x)))) - 1))
+                    returns_dict['time_series'][num][
+                        'price_data'] = price_data.to_dict()
+                except KeyError:
+                    print("No data for: ", num, ' ', label) 
                 
             returns_dict['start'] = dt.datetime.strptime(
                 tenor.index[0], "%Y-%m-%d").date()
