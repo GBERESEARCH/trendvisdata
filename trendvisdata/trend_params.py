@@ -170,13 +170,44 @@ trend_params_dict = {
             '$':'i_', # index
             '%':'y_'  # yield
             },
-
         'top_trend_params':{
             'initial_size':50,
             'max_per_sector':5,
             'final_size':20
             },
-
+        'tenor_mappings': {
+            'days': [1, 2, 3, 4],
+            'weeks': {
+                1: 5,
+                2: 10,
+                3: 15
+                },
+            'months': {
+                1: 21,
+                2: 42,
+                3: 63,
+                4: 84,
+                5: 105,
+                6: 126,
+                12: 252
+                },
+            'labels': {
+                1: '1 Day',
+                2: '2 Days',
+                3: '3 Days',
+                4: '4 Days',
+                5: '1 Week',
+                10: '2 Weeks',
+                15: '3 Weeks',
+                21: '1 Month',
+                42: '2 Months',
+                63: '3 Months',
+                84: '4 Months',
+                105: '5 Months',
+                126: '6 Months',
+                252: '12 Months'
+                },
+            },
         'sector_level':2,
         'returns_sector_level':2,
         'absolute':True,
