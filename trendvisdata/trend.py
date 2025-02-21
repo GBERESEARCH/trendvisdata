@@ -480,11 +480,21 @@ class ReturnsHistory():
                         * 100
                         )
 
-        returns_dict = {}
         data = returns_df.T.to_dict(orient='list')
         tenors = list(returns_df.columns)
-        returns_dict['tenors'] = tenors
-        returns_dict['data'] = data
+
+        returns_array = []
+        for key, value in data.items():
+            asset_dict = {}
+            asset_dict['label'] = key
+            for num, tenor in enumerate(tenors):
+                asset_dict[tenor] = value[num]
+
+            returns_array.append(asset_dict)
+
+        returns_dict = {}
+        returns_dict['data'] = returns_array
+        returns_dict['labels'] = tenors
 
         return returns_dict
 
