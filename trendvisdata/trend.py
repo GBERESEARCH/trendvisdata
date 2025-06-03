@@ -13,6 +13,7 @@ from trendvisdata.sector_mappings import sectmap
 from trendvisdata.trend_params import trend_params_dict
 from trendvisdata.trend_data import Fields, TrendRank
 from trendvisdata.market_data import NorgateExtract, YahooExtract, MktUtils
+from typing import cast
 
 
 class TrendStrength():
@@ -420,11 +421,53 @@ class ReturnsHistory():
 
         return history
 
+    
+    @classmethod
+    def get_prices(cls, history: pd.DataFrame, tenor_mappings: dict) -> dict:
+        """
+        Calculate prices for each ticker and store these in a dictionary of lists
 
-    @staticmethod
-    def get_returns(
-            history: pd.DataFrame,
-            tenor_mappings: dict) -> dict:
+        Parameters
+        ----------
+        history : DataFrame
+            Pandas DataFrame of history of closing prices for each ticker in
+            tickers.
+        tenor_mappings : Dict
+            Dictionary of mappings from week / month to day and day to column
+            headings.
+
+        Returns
+        -------
+        returns_dict : Dict
+            Dictionary of lists of various return periods.
+
+        """
+        tenor_dates = cls._get_tenor_dates(history, tenor_mappings)
+        
+        prices_df = pd.DataFrame()
+        prices_df.index = history.columns
+        
+        for column in history.columns:
+            for tenor_label, date_val in tenor_dates.items():
+                prices_df.loc[column, tenor_label] = history.loc[date_val, column]
+        
+        data = prices_df.T.to_dict(orient='list')
+        tenors = list(prices_df.columns)
+        prices_array = []
+        for key, value in data.items():
+            asset_dict = {'label': key}
+            for num, tenor in enumerate(tenors):
+                asset_dict[tenor] = value[num]
+            prices_array.append(asset_dict)
+        
+        return {
+            'data': prices_array,
+            'labels': tenors
+        }
+    
+
+    @classmethod
+    def get_returns(cls, history: pd.DataFrame, tenor_mappings: dict) -> dict:
         """
         Calculate returns for each ticker and store these in a dictionary of lists
 
@@ -443,73 +486,89 @@ class ReturnsHistory():
             Dictionary of lists of various return periods.
 
         """
+        tenor_dates = cls._get_tenor_dates(history, tenor_mappings)
+        
         returns_df = pd.DataFrame()
         returns_df.index = history.columns
         end_date = history.index[-1]
+        
+        for column in history.columns:
+            current_price = cast(float, history.loc[end_date, column])
+            
+            for tenor_label, date_val in tenor_dates.items():
+                past_price = cast(float, history.loc[date_val, column])
+                returns_df.loc[column, tenor_label] = (
+                    (current_price - past_price) / past_price * 100
+                )
+        
+        data = returns_df.T.to_dict(orient='list')
+        tenors = list(returns_df.columns)
+        returns_array = []
+        for key, value in data.items():
+            asset_dict = {'label': key}
+            for num, tenor in enumerate(tenors):
+                asset_dict[tenor] = value[num]
+            returns_array.append(asset_dict)
+        
+        return {
+            'data': returns_array,
+            'labels': tenors
+        }
+
+
+    @staticmethod
+    def _get_tenor_dates(history: pd.DataFrame, tenor_mappings: dict) -> dict:
+        """
+        Calculate the actual dates to use for each tenor period.
+        
+        Returns
+        -------
+        tenor_dates : dict
+            Dictionary mapping tenor labels to actual dates
+        """
+        def find_nearest_business_day(target_date, available_dates):
+            """Find the nearest available business day to the target date."""
+            if target_date in available_dates:
+                return target_date
+            
+            available_dates_sorted = sorted(available_dates)
+            
+            # Find dates on or after target
+            future_dates = [d for d in available_dates_sorted if d >= target_date]
+            if future_dates:
+                return future_dates[0]
+            
+            # If target is before our data starts, take the earliest available
+            return available_dates_sorted[0]
+        
+        end_date = history.index[-1]
+        available_dates = set(history.index)
+        
         days = tenor_mappings['days']
         weeks = tenor_mappings['weeks']
         months = tenor_mappings['months']
         labels = tenor_mappings['labels']
-
-        for column in history.columns:
-            for day in days:
-                returns_df.loc[column, labels[day]] = (
-                    (history[column].iloc[-1] - history[column].iloc[-day-1])
-                    / history[column].iloc[-day-1]
-                    * 100
-                    )
-
-            for week, week_day in weeks.items():
-                try:
-                    start_date = end_date + DateOffset(weeks=-week)
-                    returns_df.loc[column, labels[week_day]] = ( # type: ignore
-                        (history.loc[end_date, column] # type: ignore
-                        - history.loc[start_date, column])
-                        / history.loc[start_date, column]
-                        * 100
-                        )
-                except:
-                    returns_df.loc[column, labels[week_day]] = (
-                        (history[column].iloc[-1]
-                        - history[column].iloc[-week_day-1])
-                        / history[column].iloc[-week_day-1]
-                        * 100
-                        )
-
-            for month, month_day in months.items():
-                try:
-                    start_date = end_date + DateOffset(months=-month)
-                    returns_df.loc[column, labels[month_day]] = ( # type: ignore
-                        (history.loc[end_date, column] # type: ignore
-                        - history.loc[start_date, column])
-                        / history.loc[start_date, column]
-                        * 100
-                        )
-                except:
-                    returns_df.loc[column, labels[month_day]] = (
-                        (history[column].iloc[-1]
-                        - history[column].iloc[-month_day-1])
-                        / history[column].iloc[-month_day-1]
-                        * 100
-                        )
-
-        data = returns_df.T.to_dict(orient='list')
-        tenors = list(returns_df.columns)
-
-        returns_array = []
-        for key, value in data.items():
-            asset_dict = {}
-            asset_dict['label'] = key
-            for num, tenor in enumerate(tenors):
-                asset_dict[tenor] = value[num]
-
-            returns_array.append(asset_dict)
-
-        returns_dict = {}
-        returns_dict['data'] = returns_array
-        returns_dict['labels'] = tenors
-
-        return returns_dict
+        
+        tenor_dates = {}
+        
+        # Days: convert trading day offset to actual date
+        for day in days:
+            actual_date = history.index[-day-1]
+            tenor_dates[labels[day]] = actual_date
+        
+        # Weeks: use calendar arithmetic with business day adjustment
+        for week, week_day in weeks.items():
+            target_date = end_date + DateOffset(weeks=-week)
+            actual_date = find_nearest_business_day(target_date, available_dates)
+            tenor_dates[labels[week_day]] = actual_date
+        
+        # Months: use calendar arithmetic with business day adjustment
+        for month, month_day in months.items():
+            target_date = end_date + DateOffset(months=-month)
+            actual_date = find_nearest_business_day(target_date, available_dates)
+            tenor_dates[labels[month_day]] = actual_date
+        
+        return tenor_dates
 
 
     @classmethod
@@ -540,5 +599,9 @@ class ReturnsHistory():
         tickers = cls.get_tickers()
         history = cls.get_history(start_date, end_date, tickers)
         returns = cls.get_returns(history, tenor_mappings)
+        prices = cls.get_prices(history, tenor_mappings)
 
-        return returns
+        return {
+            'returns': returns,
+            'prices': prices
+        }
