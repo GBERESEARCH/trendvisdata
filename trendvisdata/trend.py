@@ -6,7 +6,8 @@ results
 import copy
 import norgatedata
 import pandas as pd
-from pandas.tseries.offsets import DateOffset
+import datetime as dt
+from pandas.tseries.offsets import BDay, DateOffset
 from trendvisdata.chart_data import Data
 from trendvisdata.sector_mappings import sectmap
 from trendvisdata.trend_params import trend_params_dict
@@ -386,6 +387,18 @@ class ReturnsHistory():
 
         """
         history = pd.DataFrame()
+
+        # If end date is not supplied, set to previous working day
+        if end_date is None:
+            end_date_as_dt = (dt.datetime.today() - BDay(1)).date()
+            end_date = str(end_date_as_dt)
+
+        # If start date is not supplied, set to today minus lookback period
+        if start_date is None:
+            start_date_as_dt = (
+                dt.datetime.today()
+                - pd.Timedelta(days=trend_params_dict['df_params']['lookback']*(365/250))).date()
+            start_date = str(start_date_as_dt)
 
         for ticker in tickers:
             data = norgatedata.price_timeseries(
