@@ -423,7 +423,11 @@ class ReturnsHistory():
 
     
     @classmethod
-    def get_prices(cls, history: pd.DataFrame, tenor_mappings: dict) -> dict:
+    def get_prices(
+        cls, 
+        history: pd.DataFrame, 
+        tenor_mappings: dict, 
+        short_label: bool = True) -> dict:
         """
         Calculate prices for each ticker and store these in a dictionary of lists
 
@@ -442,7 +446,7 @@ class ReturnsHistory():
             Dictionary of lists of various return periods.
 
         """
-        tenor_dates = cls._get_tenor_dates(history, tenor_mappings)
+        tenor_dates = cls._get_tenor_dates(history, tenor_mappings, short_label)
         
         prices_df = pd.DataFrame()
         prices_df.index = history.columns
@@ -467,7 +471,11 @@ class ReturnsHistory():
     
 
     @classmethod
-    def get_returns(cls, history: pd.DataFrame, tenor_mappings: dict) -> dict:
+    def get_returns(
+        cls, 
+        history: pd.DataFrame, 
+        tenor_mappings: dict, 
+        short_label: bool = True) -> dict:
         """
         Calculate returns for each ticker and store these in a dictionary of lists
 
@@ -486,7 +494,11 @@ class ReturnsHistory():
             Dictionary of lists of various return periods.
 
         """
-        tenor_dates = cls._get_tenor_dates(history, tenor_mappings)
+        tenor_dates = cls._get_tenor_dates(
+            history=history, 
+            tenor_mappings=tenor_mappings, 
+            short_label=short_label
+            )
         
         returns_df = pd.DataFrame()
         returns_df.index = history.columns
@@ -517,7 +529,10 @@ class ReturnsHistory():
 
 
     @staticmethod
-    def _get_tenor_dates(history: pd.DataFrame, tenor_mappings: dict) -> dict:
+    def _get_tenor_dates(
+        history: pd.DataFrame, 
+        tenor_mappings: dict, 
+        short_label: bool) -> dict:
         """
         Calculate the actual dates to use for each tenor period.
         
@@ -547,7 +562,10 @@ class ReturnsHistory():
         days = tenor_mappings['days']
         weeks = tenor_mappings['weeks']
         months = tenor_mappings['months']
-        labels = tenor_mappings['labels']
+        if short_label:
+            labels = tenor_mappings['short_labels']
+        else:                
+            labels = tenor_mappings['labels']
         
         tenor_dates = {}
         
@@ -598,10 +616,30 @@ class ReturnsHistory():
         """
         tickers = cls.get_tickers()
         history = cls.get_history(start_date, end_date, tickers)
-        returns = cls.get_returns(history, tenor_mappings)
-        prices = cls.get_prices(history, tenor_mappings)
+        returns = cls.get_returns(
+            history=history, 
+            tenor_mappings=tenor_mappings, 
+            short_label=True
+            )
+        returns_long = cls.get_returns(
+            history=history, 
+            tenor_mappings=tenor_mappings, 
+            short_label=False
+            )
+        prices = cls.get_prices(
+            history=history, 
+            tenor_mappings=tenor_mappings, 
+            short_label=True
+            )
+        prices_long = cls.get_prices(
+            history=history, 
+            tenor_mappings=tenor_mappings, 
+            short_label=False
+            )
 
         return {
             'returns': returns,
-            'prices': prices
+            'returns_long': returns_long,
+            'prices': prices,
+            'prices_long': prices_long
         }

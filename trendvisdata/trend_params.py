@@ -176,7 +176,7 @@ trend_params_dict = {
             'final_size':20
             },
         'tenor_mappings': {
-            'days': [1, 2, 3, 4],
+            'days': [0, 1, 2, 3, 4],
             'weeks': {
                 1: 5,
                 2: 10,
@@ -192,6 +192,7 @@ trend_params_dict = {
                 12: 252
                 },
             'labels': {
+                0: 'COB',
                 1: '1 Day',
                 2: '2 Days',
                 3: '3 Days',
@@ -206,6 +207,23 @@ trend_params_dict = {
                 105: '5 Months',
                 126: '6 Months',
                 252: '12 Months'
+                },
+            'short_labels': {
+                0: 'COB',
+                1: '1D',
+                2: '2D',
+                3: '3D',
+                4: '4D',
+                5: '1W',
+                10: '2W',
+                15: '3W',
+                21: '1M',
+                42: '2M',
+                63: '3M',
+                84: '4M',
+                105: '5M',
+                126: '6M',
+                252: '12M'
                 },
             },
         'sector_level':2,
