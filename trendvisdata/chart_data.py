@@ -261,9 +261,13 @@ class Data():
             flag=flag
             )
         
+        # Backfill first row if NaN
+        tenor = raw_tenor.bfill(limit=1)
+        chart_data = raw_chart_data.bfill(limit=1)
+
         # Drop any columns containing nan values
-        tenor = raw_tenor.dropna(axis=1)
-        chart_data = raw_chart_data.dropna(axis=1)
+        tenor = tenor.dropna(axis=1)
+        chart_data = chart_data.dropna(axis=1)
 
         returns_dict = {}
         try:
