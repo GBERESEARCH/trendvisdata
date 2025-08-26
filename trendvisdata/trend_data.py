@@ -171,7 +171,7 @@ class Fields():
 
             # Create flag for MACD histogram increasing
             frame['MACD_flag'] = np.where(
-                frame['MACD_HIST'].diff() > 0, 1, -1)
+                frame['MACD_HIST'].diff() > 0, 1, -1) #type: ignore
 
         except RuntimeWarning:
             print("Error with " + ticker + " MACD")

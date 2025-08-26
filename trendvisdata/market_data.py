@@ -9,8 +9,9 @@ import pandas as pd
 import requests
 from pandas.tseries.offsets import BDay
 # from yahoofinancials import YahooFinancials
+from trendvisdata.trend_params import USER_AGENTS, request_headers
 import yfinance as yf
-
+import random
 
 class NorgateExtract():
     """
@@ -246,9 +247,19 @@ class YahooExtract():
         """
 
         # Extract data from the Wikipedia SPX page
+        # url = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
+        # req = requests.get(url, timeout=10)
+        # html_doc = req.text
+        # spx_list = pd.read_html(StringIO(html_doc))
+
+        random.seed(dt.datetime.now().timestamp())
+        user_agent = random.choice(USER_AGENTS)
+        request_headers["User-Agent"] = user_agent
+        urlopener = MktUtils.UrlOpener()
+        
         url = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
-        req = requests.get(url, timeout=10)
-        html_doc = req.text
+        response = urlopener.open(url, request_headers)
+        html_doc = response.text
         spx_list = pd.read_html(StringIO(html_doc))
 
         # the first table on the page contains the stock data
@@ -413,7 +424,7 @@ class YahooExtract():
         frame = frame.drop(['Dividends', 'Stock Splits'], axis=1)
 
         # Set Index to Datetime
-        frame.index = frame.index.tz_localize(None)
+        frame.index = frame.index.tz_localize(None) # type: ignore
 
         # Set the proper length of DataFrame to help filter out missing data
         params = MktUtils.window_set(frame=frame, params=params)
@@ -426,6 +437,37 @@ class MktUtils():
     Various market data cleaning utilities
 
     """
+    class UrlOpener:
+        """
+        Extract data from Yahoo Finance URL
+
+        """
+
+        def __init__(self):
+            self._session = requests
+
+        def open(self, url: str, request_headers: dict) -> requests.models.Response:
+            """
+            Extract data from Yahoo Finance URL
+
+            Parameters
+            ----------
+            url : Str
+                The URL to extract data from.
+
+            Returns
+            -------
+            response : Response object
+                Response object of requests module.
+
+            """
+            print("User Agent: ", request_headers["User-Agent"])
+            response = self._session.get(
+                url=url, headers=request_headers, timeout=10)
+
+            return response
+        
+
     @staticmethod
     def ticker_clean(
         params: dict,
