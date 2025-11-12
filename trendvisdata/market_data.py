@@ -262,8 +262,16 @@ class YahooExtract():
         html_doc = response.text
         spx_list = pd.read_html(StringIO(html_doc))
 
-        # the first table on the page contains the stock data
-        spx_table = spx_list[0]
+        # get the stock data from the response
+        try:
+            spx_table = spx_list[0]
+            # create a list of the tickers from the 'Symbol' column
+            params['tickers'] = list(spx_table['Symbol'])
+
+        except KeyError:
+            spx_table = spx_list[1]    
+            # create a list of the tickers from the 'Symbol' column
+            params['tickers'] = list(spx_table['Symbol'])
 
         # create a list of the tickers from the 'Symbol' column
         params['tickers'] = list(spx_table['Symbol'])
