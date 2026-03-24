@@ -1,15 +1,41 @@
+import copy
 import datetime as dt
 from math import log10, floor
 import numpy as np
 import pandas as pd
 import collections
 from trendvisdata.chart_prep import Formatting
+from trendvisdata.trend_params import trend_params_dict
 
 class Data():
     """
     Create data dictionaries to display various charts of Trend Strength
 
     """
+
+    @staticmethod
+    def _init_params(inputs: dict) -> dict:
+        """
+        Initialise a parameter dictionary from defaults with caller
+        overrides applied on top.
+
+        Parameters
+        ----------
+        inputs : dict
+            Caller-supplied parameter overrides. Any key present in
+            trend_params_dict['df_params'] is valid.
+
+        Returns
+        -------
+        params : dict
+            Deep copy of the default parameter dict with all keys in
+            inputs applied.
+        """
+        params: dict = copy.deepcopy(trend_params_dict['df_params'])
+        for key, value in inputs.items():
+            params[key] = value
+        return params
+
     @classmethod
     def get_all_data(cls, params, tables):
         """
@@ -45,9 +71,6 @@ class Data():
             Data dictionary for graphing of barchart, returns and market charts.
 
         """
-        #start = dt.datetime.strptime(params['start_date'], "%Y-%m-%d").date()
-        #end = dt.datetime.strptime(params['end_date'], "%Y-%m-%d").date()
-
         data_dict = {}
         barometer = tables['barometer']
         
@@ -97,23 +120,14 @@ class Data():
             Data dictionary for plotting barchart trends.
 
         """
-        # Create default dict to add keys not found
         bar_dict = collections.defaultdict(dict)
         mkts = params['mkts']
 
-        # Create entries for up trend
         bar_dict = cls._barometer_up(barometer, mkts, bar_dict)
-        
-        # Create entries for down trend
         bar_dict = cls._barometer_down(barometer, mkts, bar_dict)
-
-        # Create entries for neutral trend
         bar_dict = cls._barometer_neutral(barometer, mkts, bar_dict)
-
-        # Create entries for strong trend
         bar_dict = cls._barometer_strong(barometer, mkts, bar_dict)
 
-        # Convert back to regular dict
         bar_dict = dict(bar_dict)
 
         return bar_dict
@@ -121,7 +135,6 @@ class Data():
     
     @classmethod
     def _barometer_up(cls, barometer, mkts, bar_dict):
-        # Create entries for up trend
         barometer_up = barometer.sort_values(
             by=['Trend Strength %'], ascending=True)
         short_name = list(barometer_up['Short_name'].iloc[-mkts:])
@@ -136,7 +149,6 @@ class Data():
 
     @classmethod
     def _barometer_down(cls, barometer, mkts, bar_dict):
-        # Create entries for down trend
         barometer_down = barometer.sort_values(
             by=['Trend Strength %'], ascending=False)
         short_name = list(barometer_down['Short_name'].iloc[-mkts:])
@@ -152,7 +164,6 @@ class Data():
         
     @classmethod
     def _barometer_neutral(cls, barometer, mkts, bar_dict):
-        # Create entries for neutral trend
         barometer_neutral = barometer.sort_values(
             by=['Absolute Trend Strength %'], ascending=True)
         short_name = list(barometer_neutral['Short_name'].iloc[:mkts])
@@ -167,7 +178,6 @@ class Data():
 
     @classmethod
     def _barometer_strong(cls, barometer, mkts, bar_dict):
-        # Create entries for strong trend
         barometer_neutral = barometer.sort_values(
             by=['Absolute Trend Strength %'], ascending=True)
         short_name = list(
@@ -254,28 +264,23 @@ class Data():
             Dictionary of data to create a line graph of normalised price history.
 
         """
-        # Generate DataFrame of normalized returns
         raw_tenor, raw_chart_data = Formatting.create_normalized_data(
             params=params, 
             tables=tables,
             flag=flag
             )
         
-        # Backfill first row if NaN
         tenor = raw_tenor.bfill(limit=1)
         chart_data = raw_chart_data.bfill(limit=1)
 
-        # Drop any columns containing nan values
         tenor = tenor.dropna(axis=1)
         chart_data = chart_data.dropna(axis=1)
 
         returns_dict = {}
         try:
-            #tenor.index = tenor.index.astype(pd.DatetimeIndex)
             tenor.index = tenor.index.date.astype(str) # type: ignore comment;
             chart_data.index = chart_data.index.date.astype(str) # type: ignore comment;
 
-            # Create empty returns dict & add returns and labels            
             returns_dict['time_series'] = {}
             for num, label in enumerate(tenor.columns):
                 try:
@@ -413,4 +418,3 @@ class Data():
             ]
         
         return obj
-    
