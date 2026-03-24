@@ -1,7 +1,6 @@
 """
 Calculate Trend Strength across various markets / asset classes and graph
-results
-
+results.
 """
 import copy
 import norgatedata
@@ -100,7 +99,7 @@ class TrendStrength():
             inputs[key] = value
 
         # Initialise system parameters
-        params = self._init_params(inputs)
+        params = Data._init_params(inputs)
 
         # Import the data from Norgate Data
         if params['source'] == 'norgate':
@@ -128,32 +127,6 @@ class TrendStrength():
         self.params = params
         self.mappings = mappings
         self.data_dict = data_dict
-
-
-    @staticmethod
-    def _init_params(inputs: dict) -> dict:
-        """
-        Initialise parameter dictionary
-        Parameters
-        ----------
-        inputs : Dict
-            Dictionary of parameters supplied to the function.
-
-        Returns
-        -------
-        params : Dict
-            Dictionary of parameters.
-        """
-        # Copy the default parameters
-        params = copy.deepcopy(trend_params_dict['df_params'])
-
-        # For all the supplied arguments
-        for key, value in inputs.items():
-
-            # Replace the default parameter with that provided
-            params[key] = value
-
-        return params
 
 
     @staticmethod
@@ -643,3 +616,4 @@ class ReturnsHistory():
             'prices': prices,
             'prices_long': prices_long
         }
+    
