@@ -252,7 +252,10 @@ sectmap = {
         '&ZS':('Commodities','Diversified Agriculture', 'Agriculture', 'Grains', 'Soybeans'), # Soybeans
         '&ZT':('Bonds','Government Bonds','Government Bonds','Government Bonds', '2-Year US T-Note'), # 2-Year US T-Note
         '&ZW':('Commodities','Diversified Agriculture', 'Agriculture', 'Grains', 'Chicago SRW Wheat'), # Chicago SRW Wheat
+        '#CUGC':('Commodities', 'Metals', 'Metals', 'Metals', 'Benchmark'), # Copper/Gold Ratio
         '#GSR':('Commodities', 'Metals', 'Precious Metals', 'Precious Metals', 'Benchmark'), # Gold/Silver Ratio
+        '#PLSI':('Commodities', 'Metals', 'Precious Metals', 'Precious Metals', 'Benchmark'), # Platinum/Silver Ratio
+        '#SIBTC':('Commodities', 'Metals', 'Precious Metals', 'Precious Metals', 'Benchmark'), # Silver/Bitcoin Ratio
         '$BCOM':('Commodities', 'Commodities', 'Commodities', 'Commodities', 'Benchmark'), # Bloomberg Commodity Index
         '$BCOMAG':('Commodities','Diversified Agriculture', 'Agriculture', 'Agriculture', 'Benchmark'), # Bloomberg Agriculture Sub-Index
         '$BCOMEN':('Commodities', 'Energy', 'Energy', 'Energy', 'Benchmark'), # Bloomberg Energy Sub-Index

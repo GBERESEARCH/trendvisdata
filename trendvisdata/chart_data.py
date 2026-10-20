@@ -82,12 +82,15 @@ class Data():
         data_dict['returns_dict']['high_returns_dict'] = cls.get_returns_data(
             params=params, tables=tables, flag='High Returns')
         
-        if params['source'] == 'norgate':
-            sectors = list(set(
-                tables['barometer'][params['returns_sector_name']]))
-        else:
-            sectors = list(set(
-                tables['barometer'][params['returns_sector_name']]))
+        # if params['source'] == 'norgate':
+        #     sectors = list(set(
+        #         tables['barometer'][params['returns_sector_name']]))
+        # else:
+        #     sectors = list(set(
+        #         tables['barometer'][params['returns_sector_name']]))
+        sectors = list(set(
+            tables['barometer'][params['returns_sector_name']].dropna()))  
+
         data_dict['returns_dict']['sectors'] = {}
         for sector in sectors:
             returns_data = cls.get_returns_data(
@@ -273,8 +276,13 @@ class Data():
         tenor = raw_tenor.bfill(limit=1)
         chart_data = raw_chart_data.bfill(limit=1)
 
-        tenor = tenor.dropna(axis=1)
-        chart_data = chart_data.dropna(axis=1)
+        # tenor = tenor.dropna(axis=1)
+        # chart_data = chart_data.dropna(axis=1)
+
+        # Keep only series with complete data in both tables
+        complete = tenor.columns[tenor.notna().all() & chart_data.notna().all()]
+        tenor = tenor[complete]
+        chart_data = chart_data[complete]
 
         returns_dict = {}
         try:

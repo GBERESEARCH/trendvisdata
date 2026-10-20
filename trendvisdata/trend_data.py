@@ -766,7 +766,13 @@ class TrendRank():
         tables['sectors'] = {}
         sector_level = params['returns_sector_name']
 
-        sectors = set(barometer[sector_level])
+        # Report tickers with no sector mapping
+        unmapped = barometer.loc[barometer[sector_level].isna(), 'Ticker']
+        if len(unmapped) > 0:
+            print("No sector mapping: " + ", ".join(unmapped))
+
+        #sectors = set(barometer[sector_level])
+        sectors = set(barometer[sector_level].dropna())
 
         for sector in sectors:
             tables['sectors'][sector] = tables[

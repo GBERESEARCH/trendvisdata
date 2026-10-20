@@ -230,27 +230,60 @@ class Formatting():
             strength.
 
         """
-        if flag == 'Unfiltered':
-            table = tables['barometer']
-        elif flag == 'High Returns':
-            table = tables['return_barometer']
+        # if flag == 'Unfiltered':
+        #     table = tables['barometer']
+        # elif flag == 'High Returns':
+        #     table = tables['return_barometer']
+        # else:
+        #     table = tables['sectors'][flag]
+
+        # data_list = cls.create_data_list(
+        #     params, 
+        #     table, 
+        #     market_chart=False, 
+        #     num_charts=None
+        #     )
+
+        # # Create a new DataFrame
+        # chart_data = pd.DataFrame()
+
+        # # For each ticker in the list of selected tickers, add the
+        # # column of closing prices to new DataFrame
+        # for ticker in data_list:
+        #     chart_data[ticker] = tables['ticker_dict'][ticker]['Close']
+
+        # # Rename columns from tickers to short names and forward fill
+        # # any NaN cells
+        # chart_data = chart_data.rename(
+        #     columns=params['ticker_short_name_dict'])
+        # chart_data = chart_data.ffill()
+
+        if flag in ('Unfiltered', 'High Returns'):
+            if flag == 'Unfiltered':
+                table = tables['barometer']
+            else:
+                table = tables['return_barometer']
+
+            data_list = cls.create_data_list(
+                params,
+                table,
+                market_chart=False,
+                num_charts=None
+                )
+
         else:
-            table = tables['sectors'][flag]
+            # Sector series include every member of the sector
+            data_list = list(tables['sectors'][flag]['Ticker'])
 
-        data_list = cls.create_data_list(
-            params, 
-            table, 
-            market_chart=False, 
-            num_charts=None
-            )
+        closes = {
+            ticker: tables['ticker_dict'][ticker]['Close']
+            for ticker in data_list
+            }
 
-        # Create a new DataFrame
-        chart_data = pd.DataFrame()
-
-        # For each ticker in the list of selected tickers, add the
-        # column of closing prices to new DataFrame
-        for ticker in data_list:
-            chart_data[ticker] = tables['ticker_dict'][ticker]['Close']
+        # Index on the dates of the series with the latest end date and,
+        # of those, the most observations
+        reference = max(closes.values(), key=lambda s: (s.index[-1], len(s)))
+        chart_data = pd.DataFrame(closes, index=reference.index)
 
         # Rename columns from tickers to short names and forward fill
         # any NaN cells

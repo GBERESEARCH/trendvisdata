@@ -426,7 +426,16 @@ class YahooExtract():
         asset = yf.Ticker(ticker)
 
         # Extract historic prices
-        frame = asset.history(start=params['start_date'], end=params['end_date'])
+        # frame = asset.history(start=params['start_date'], end=params['end_date'])
+
+        # yfinance treats end as exclusive, so pass the following day to
+        # include end_date itself
+        end_exclusive = (
+            pd.Timestamp(params['end_date']) + pd.Timedelta(days=1)
+        ).strftime('%Y-%m-%d')
+
+        # Extract historic prices
+        frame = asset.history(start=params['start_date'], end=end_exclusive)
 
         # Reformat columns
         frame = frame.drop(['Dividends', 'Stock Splits'], axis=1)
