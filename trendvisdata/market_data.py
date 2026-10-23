@@ -166,6 +166,56 @@ class NorgateExtract():
 
 
     @staticmethod
+    def import_norgate_yields(params: dict) -> dict:
+        """
+        Return closing levels for each series in the Norgate Economic database.
+
+        Parameters
+        ----------
+        params : Dict
+            start_date : Str
+                Start date of the history.
+            end_date : Str
+                End date of the history.
+
+        Returns
+        -------
+        yield_time_series : Dict
+            Dictionary keyed by Norgate symbol of {'label': security name,
+            'data': {date: closing level}}.
+
+        """
+        yield_time_series = {}
+
+        # Specify Norgate Economic database and extract each series
+        databasename = 'Economic'
+        databasecontents = norgatedata.database(databasename)
+
+        for dicto in databasecontents:
+            symbol = dicto['symbol']
+            data = norgatedata.price_timeseries(
+                symbol, start_date=params['start_date'],
+                end_date=params['end_date'],
+                format='pandas-dataframe',)
+
+            if isinstance(data, pd.DataFrame) and len(data) > 0:
+                closes = data['Close'].dropna()
+                yield_time_series[symbol] = {
+                    'label': dicto['securityname'],
+                    'data': {
+                        day: round(float(value), 4)
+                        for day, value in zip(
+                            pd.to_datetime(closes.index).strftime('%Y-%m-%d'),
+                            closes,
+                        )
+                    },
+
+                }
+
+        return yield_time_series
+
+
+    @staticmethod
     def _commodity_sector_mappings(
         params: dict,
         mappings: dict) -> pd.DataFrame:

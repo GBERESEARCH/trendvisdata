@@ -78,6 +78,7 @@ def _execute_run(
     days: int,
     source: str,
     mkts: int,
+    cob_date: str,
     source_metadata: dict[str, Any],
     full_price_history: dict[str, pd.DataFrame],
     source_mappings: dict[str, Any],
@@ -97,6 +98,8 @@ def _execute_run(
         Data source; ``'yahoo'`` or ``'norgate'``.
     mkts : int
         Number of markets for bar and market chart panels.
+    cob_date:
+        The Close of Business Date that the batch was run for.
     source_metadata : dict[str, Any]
         Ticker list and name mappings from the shared fetch.
     full_price_history : dict[str, pd.DataFrame]
@@ -149,6 +152,13 @@ def _execute_run(
     _, tables = TrendStrength.top_trend_tickers(params=params, tables=tables)
 
     data_dict: dict[str, Any] = Data.get_all_data(params=params, tables=tables)
+
+    if source == 'norgate':
+        data_dict['yield_time_series'] = NorgateExtract.import_norgate_yields(
+            params=params
+        )
+
+    data_dict['cob_date'] = cob_date
 
     output: dict[str, Any] = {'data_dict': data_dict}
     numpy_encoded: str = json.dumps(output, cls=NumpyDateEncoder)
@@ -315,6 +325,7 @@ class TrendBatch:
         self._output_dir: Path = output_root / cob_date
         self._output_dir.mkdir(parents=True, exist_ok=True)
         self._mkts: int = mkts
+        self.cob_date: str = cob_date
 
         yahoo_runs: dict[str, dict[str, str | int]] = {
             k: v for k, v in batch_config.items() if v['source'] == 'yahoo'
@@ -368,6 +379,7 @@ class TrendBatch:
                     days=days,
                     source=source,
                     mkts=self._mkts,
+                    cob_date=self.cob_date,
                     source_metadata=source_metadata,
                     full_price_history=full_price_history,
                     source_mappings=source_mappings,
@@ -410,12 +422,13 @@ class TrendBatchParallel:
         batch_config: dict[str, dict[str, str | int]],
         cob_date: str,
         output_root: Path,
-        mkts: int,
+        mkts: int,        
         max_workers: int = 5,
     ) -> None:
         self._output_dir: Path = output_root / cob_date
         self._output_dir.mkdir(parents=True, exist_ok=True)
         self._mkts: int = mkts
+        self.cob_date : str = cob_date
         self._max_workers: int = max_workers
 
         yahoo_runs: dict[str, dict[str, str | int]] = {
@@ -469,6 +482,7 @@ class TrendBatchParallel:
                     days=int(run_config['days']),
                     source=source,
                     mkts=self._mkts,
+                    cob_date=self.cob_date,
                     source_metadata=source_metadata,
                     full_price_history=full_price_history,
                     source_mappings=source_mappings,

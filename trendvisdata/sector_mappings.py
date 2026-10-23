@@ -352,6 +352,15 @@ sectmap = {
         '@ZNAUD':('Commodities', 'Metals', 'Industrial Metals', 'Industrial Metals', 'Zinc'), # Zinc - LME Official Cash (AUD)
         '@ZNCAD':('Commodities', 'Metals', 'Industrial Metals', 'Industrial Metals', 'Zinc'), # Zinc - LME Official Cash (CAD)
         '@ZNWS':('Commodities', 'Metals', 'Industrial Metals', 'Industrial Metals', 'Zinc'), # Zinc - LME Warehouse Opening Stocks
+        '%AU03GB':('Bonds', 'Government Bond Yields', 'Government Bond Yields', 'Government Bond Yields', 'AU 3-Year Government Bond Yield'), # AU 3-Year Government Bond Yield
+        '%AU10GB':('Bonds', 'Government Bond Yields', 'Government Bond Yields', 'Government Bond Yields', 'AU 10-Year Government Bond Yield'), # AU 10-Year Government Bond Yield
+        '%CA10GB':('Bonds', 'Government Bond Yields', 'Government Bond Yields', 'Government Bond Yields', 'CA 10-Year Government Bond Yield'), # CA 10-Year Government Bond Yield
+        '%CA3MTB':('Bonds', 'Government Bond Yields', 'Government Bond Yields', 'Government Bond Yields', 'CA 3-Month T. Bill Yield'), # CA 3-Month T. Bill Yield
+        '%FFYE':('Bonds', 'Government Bond Yields', 'Government Bond Yields', 'Government Bond Yields', 'Federal Funds Rate (Effective)'), # Federal Funds Rate (Effective)
+        '%FVX':('Bonds', 'Government Bond Yields', 'Government Bond Yields', 'Government Bond Yields', 'US 5-Year T. Note Yield'), # US 5-Year T. Note Yield
+        '%IRX':('Bonds', 'Government Bond Yields', 'Government Bond Yields', 'Government Bond Yields', 'US 13-Week T. Bill Yield'), # US 13-Week T. Bill Yield
+        '%TNX':('Bonds', 'Government Bond Yields', 'Government Bond Yields', 'Government Bond Yields', 'US 10-Year T. Note Yield'), # US 10-Year T. Note Yield
+        '%TYX':('Bonds', 'Government Bond Yields', 'Government Bond Yields', 'Government Bond Yields', 'US 30-Year T. Bond Yield'), # US 30-Year T. Bond Yield
         },
 
     # 'equity_sector_mappings':{
