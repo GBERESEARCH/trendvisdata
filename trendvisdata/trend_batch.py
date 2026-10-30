@@ -158,6 +158,9 @@ def _execute_run(
             params=params
         )
 
+    if source == 'yahoo':
+        data_dict['security_info'] = source_metadata['security_info']
+
     data_dict['cob_date'] = cob_date
 
     output: dict[str, Any] = {'data_dict': data_dict}
@@ -226,10 +229,31 @@ class _DataFetch:
         tables: dict[str, Any] = {}
         params, tables = YahooExtract.import_yahoo(params=params, tables=tables)
 
+        # Classification and market cap per security, keyed by security name.
+        # Market cap is the share class's shares outstanding times its last
+        # close.
+        sector_mappings_df: pd.DataFrame = source_mappings['sector_mappings_df']
+        security_info: dict[str, dict[str, Any]] = {}
+        for sym, frame in tables['raw_ticker_dict'].items():
+            if sym not in sector_mappings_df.index or len(frame) == 0:
+                continue
+            row = sector_mappings_df.loc[sym]
+            shares = params['shares_outstanding'].get(sym)
+            security_info[row['Security']] = {
+                'sector': row['Sector'],
+                'industry_group': row['Industry Group'],
+                'industry': row['Industry'],
+                'sub_industry': row['Sub-Industry'],
+                'market_cap': (
+                    float(shares * frame['Close'].iloc[-1]) if shares else None
+                ),
+            }
+
         source_metadata: dict[str, Any] = {
             'tickers': params['tickers'],
             'ticker_name_dict': params['ticker_name_dict'],
             'ticker_short_name_dict': params['ticker_short_name_dict'],
+            'security_info': security_info,
         }
 
         return source_metadata, tables['raw_ticker_dict'], source_mappings

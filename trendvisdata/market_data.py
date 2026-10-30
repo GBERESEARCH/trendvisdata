@@ -390,11 +390,14 @@ class YahooExtract():
         params : Dict
             exceptions : List
                 List of tickers that could not be returned.
+            shares_outstanding : Dict
+                Shares outstanding of each share class, keyed by ticker.
 
         """
 
-        # Create empty dictionary and list
+                # Create empty dictionaries and list
         tables['raw_ticker_dict'] = {}
+        params['shares_outstanding'] = {}
         params['exceptions'] = []
 
         # Loop through the tickers
@@ -411,6 +414,10 @@ class YahooExtract():
                     sym_alt = sym.replace('.','-')
                     tables['raw_ticker_dict'][sym], params = cls._return_data(
                         ticker=sym_alt, params=params)
+
+                    # Shares outstanding keyed by the original symbol
+                    params['shares_outstanding'][sym] = params[
+                        'shares_outstanding'].pop(sym_alt, None)
 
                 # If error, add to list of exceptions and move to next
                 # ticker
@@ -490,8 +497,15 @@ class YahooExtract():
         # Reformat columns
         frame = frame.drop(['Dividends', 'Stock Splits'], axis=1)
 
-        # Set Index to Datetime
+                # Set Index to Datetime
         frame.index = frame.index.tz_localize(None) # type: ignore
+
+        # Shares outstanding of this share class; None if unavailable
+        try:
+            params['shares_outstanding'][ticker] = asset.info.get(
+                'sharesOutstanding')
+        except Exception:
+            params['shares_outstanding'][ticker] = None
 
         # Set the proper length of DataFrame to help filter out missing data
         params = MktUtils.window_set(frame=frame, params=params)
