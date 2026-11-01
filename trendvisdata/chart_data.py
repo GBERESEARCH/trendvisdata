@@ -284,6 +284,17 @@ class Data():
         tenor = tenor[complete]
         chart_data = chart_data[complete]
 
+        # Ticker for each label: the Norgate symbol, or the Yahoo ticker
+        label_tickers = {}
+        type_prefixes = {
+            code: prefix for prefix, code in params['ticker_types'].items()}
+        for ticker, short_name in params['ticker_short_name_dict'].items():
+            if params['source'] == 'norgate':
+                label_tickers[short_name] = (
+                    type_prefixes[ticker[:2]] + ticker[2:].upper())
+            else:
+                label_tickers[short_name] = ticker
+
         returns_dict = {}
         try:
             tenor.index = tenor.index.date.astype(str) # type: ignore comment;
@@ -294,6 +305,8 @@ class Data():
                 try:
                     returns_dict['time_series'][num] = {}
                     returns_dict['time_series'][num]['label'] = label
+                    returns_dict['time_series'][num][
+                        'ticker'] = label_tickers.get(label)
                     returns_dict['time_series'][num][
                         'data'] = tenor[label].to_dict()
                     returns_dict['time_series'][num][
@@ -413,7 +426,115 @@ class Data():
         market_dict['chart_title'] = Formatting.get_chart_title(params=params) # type: ignore comment;
         
         return market_dict
-    
+
+
+    @staticmethod
+    def get_period_returns(closes: pd.Series, periods: list) -> dict:
+        """
+        Return in percent over each period to the last close.
+
+        Parameters
+        ----------
+        closes : Series
+            Closing prices indexed by date.
+        periods : List
+            Period definitions, each {'key', 'days'} in trading days or
+            {'key', 'months'} in calendar months.
+
+        Returns
+        -------
+        returns : Dict
+            Return in percent keyed by period key, from the first close on or
+            after each period's start date. Day periods longer than the
+            history are omitted.
+
+        """
+        closes = closes.dropna()
+        returns = {}
+        if len(closes) < 2:
+            return returns
+
+        last_date = closes.index[-1]
+        for period in periods:
+            if 'days' in period:
+                if len(closes) <= period['days']:
+                    continue
+                start = closes.iloc[-1 - period['days']]
+            else:
+                start_date = last_date - pd.DateOffset(months=period['months'])
+                start = closes[closes.index >= start_date].iloc[0]
+            returns[period['key']] = round(
+                float((closes.iloc[-1] / start - 1) * 100), 2)
+
+        return returns
+
+
+    @staticmethod
+    def get_sector_heatmap(
+        sector_closes: dict,
+        benchmark_closes: pd.Series,
+        weekly: bool) -> dict:
+        """
+        Median member return per sector and benchmark return, per week or
+        month.
+
+        Parameters
+        ----------
+        sector_closes : Dict
+            List of closing price Series for each sector.
+        benchmark_closes : Series
+            Benchmark closing prices indexed by date.
+        weekly : Bool
+            Weekly columns if True, monthly columns otherwise.
+
+        Returns
+        -------
+        sector_heatmap : Dict
+            interval : Str
+                'week' or 'month'.
+            columns : List
+                Start date of each column, 'YYYY-MM-DD'.
+            benchmark : List
+                Benchmark return in percent per column.
+            sectors : Dict
+                For each sector, 'median' (median member return in percent)
+                and 'count' (number of members with a return) per column.
+
+        """
+        freq = 'W' if weekly else 'M'
+
+        # Return in percent from the last close of the previous column to the
+        # last close of the column
+        def column_returns(closes):
+            closes = closes.dropna()
+            last = closes.groupby(closes.index.to_period(freq)).last()
+            return last.pct_change().mul(100).iloc[1:]
+
+        benchmark = column_returns(benchmark_closes)
+
+        sectors = {}
+        for sector, closes_list in sector_closes.items():
+            if len(closes_list) == 0:
+                continue
+            members = pd.concat(
+                [column_returns(closes) for closes in closes_list],
+                axis=1).reindex(benchmark.index)
+            sectors[sector] = {
+                'median': [
+                    None if pd.isna(value) else round(float(value), 2)
+                    for value in members.median(axis=1)],
+                'count': [int(value) for value in members.notna().sum(axis=1)],
+            }
+
+        return {
+            'interval': 'week' if weekly else 'month',
+            'columns': [
+                period.start_time.strftime('%Y-%m-%d')
+                for period in benchmark.index],
+            'benchmark': [round(float(value), 2) for value in benchmark],
+            'sectors': sectors,
+        }
+
 
     @classmethod
     def _round_floats(cls, obj):

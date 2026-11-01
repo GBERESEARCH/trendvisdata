@@ -83,6 +83,7 @@ def _execute_run(
     full_price_history: dict[str, pd.DataFrame],
     source_mappings: dict[str, Any],
     output_dir: Path,
+    last_run: bool = False,
 ) -> str:
     """
     Execute the trend strength pipeline for a single lookback window and
@@ -108,6 +109,9 @@ def _execute_run(
         Sector mappings; deep-copied before use.
     output_dir : Path
         Directory to which the output JSON file is written.
+    last_run : bool, optional
+        Whether this is the source's last run in batch_config, which also
+        writes the security information and yields. The default is False.
 
     Returns
     -------
@@ -153,13 +157,60 @@ def _execute_run(
 
     data_dict: dict[str, Any] = Data.get_all_data(params=params, tables=tables)
 
-    if source == 'norgate':
+    if source == 'norgate' and last_run:
         data_dict['yield_time_series'] = NorgateExtract.import_norgate_yields(
             params=params
         )
 
     if source == 'yahoo':
-        data_dict['security_info'] = source_metadata['security_info']
+        data_dict['benchmark_series'] = NorgateExtract.import_norgate_benchmarks(
+            params=params
+        )
+        if last_run:
+            data_dict['security_info'] = source_metadata['security_info']
+            for series in data_dict['benchmark_series'].values():
+                series['returns'] = Data.get_period_returns(
+                    closes=pd.Series(
+                        list(series['data'].values()),
+                        index=pd.to_datetime(list(series['data'].keys())),
+                    ),
+                    periods=params['return_periods'],
+                )
+
+    # Heatmap benchmark: the first of heatmap_benchmarks in the benchmark
+    # series or the run's price data
+    benchmark_closes: pd.Series | None = None
+    for symbol in params['heatmap_benchmarks']:
+        if symbol in data_dict.get('benchmark_series', {}):
+            series_data = data_dict['benchmark_series'][symbol]['data']
+            benchmark_closes = pd.Series(
+                list(series_data.values()),
+                index=pd.to_datetime(list(series_data.keys())),
+            )
+            break
+        lowtick = (params['ticker_types'][symbol[0]] + symbol[1:]).lower()
+        if lowtick in tables['raw_ticker_dict']:
+            benchmark_closes = tables['raw_ticker_dict'][lowtick]['Close']
+            break
+
+    # Sector closes from the sector series written to the file
+    if benchmark_closes is not None:
+        sector_closes: dict[str, list[pd.Series]] = {
+            sector: [
+                pd.Series(
+                    list(series['price_data'].values()),
+                    index=pd.to_datetime(list(series['price_data'].keys())),
+                )
+                for series in sector_data['time_series'].values()
+                if 'price_data' in series
+            ]
+            for sector, sector_data in data_dict['returns_dict']['sectors'].items()
+        }
+        data_dict['sector_heatmap'] = Data.get_sector_heatmap(
+            sector_closes=sector_closes,
+            benchmark_closes=benchmark_closes,
+            weekly=days <= 500,
+        )
 
     data_dict['cob_date'] = cob_date
 
@@ -174,6 +225,41 @@ def _execute_run(
         json.dump(serialised_output, fp)
 
     return label
+
+
+def _index_run_inputs(
+    label: str,
+    source_metadata: dict[str, Any],
+) -> tuple[str, dict[str, Any], dict[str, pd.DataFrame]]:
+    """
+    Label, metadata and price history for the index run paired with a
+    Norgate futures run.
+
+    Parameters
+    ----------
+    label : str
+        Label of the futures run, e.g. ``'F1Y'``.
+    source_metadata : dict[str, Any]
+        Norgate fetch metadata including the index ticker lists and price
+        history.
+
+    Returns
+    -------
+    index_label : str
+        Label of the index run: the futures label with its first character
+        replaced by ``'I'``, e.g. ``'I1Y'``.
+    index_metadata : dict[str, Any]
+        Index ticker list and name mappings under the standard keys.
+    index_price_history : dict[str, pd.DataFrame]
+        Index price history from the max-lookback fetch.
+    """
+    index_metadata: dict[str, Any] = {
+        'tickers': source_metadata['index_tickers'],
+        'ticker_name_dict': source_metadata['index_ticker_name_dict'],
+        'ticker_short_name_dict': source_metadata['index_ticker_short_name_dict'],
+        'init_ticker_dict': source_metadata['init_index_ticker_dict'],
+    }
+    return 'I' + label[1:], index_metadata, source_metadata['index_price_history']
 
 
 # ---------------------------------------------------------------------------
@@ -247,6 +333,9 @@ class _DataFetch:
                 'market_cap': (
                     float(shares * frame['Close'].iloc[-1]) if shares else None
                 ),
+                'returns': Data.get_period_returns(
+                    closes=frame['Close'], periods=params['return_periods']
+                ),
             }
 
         source_metadata: dict[str, Any] = {
@@ -262,6 +351,7 @@ class _DataFetch:
     def norgate(
         mkts: int,
         max_lookback: int,
+        include_indices: bool,
     ) -> tuple[dict[str, Any], dict[str, pd.DataFrame], dict[str, Any]]:
         """
         Retrieve the Norgate ticker universe and price history.
@@ -272,11 +362,16 @@ class _DataFetch:
             Number of markets for bar and market chart panels.
         max_lookback : int
             Number of trading days of history to retrieve.
+        include_indices : bool
+            Whether to also retrieve the World Indices and Forex Spot
+            tickers and price history.
 
         Returns
         -------
         source_metadata : dict[str, Any]
-            Ticker list, name mappings, and init_ticker_dict.
+            Ticker list, name mappings, and init_ticker_dict; the World
+            Indices and Forex Spot ticker list, name mappings and
+            init_index_ticker_dict; and the index price history.
         full_price_history : dict[str, pd.DataFrame]
             Raw OHLCV DataFrames keyed by ticker symbol.
         source_mappings : dict[str, Any]
@@ -290,6 +385,7 @@ class _DataFetch:
             'norm': False,
         })
         params['asset_type'] = 'CTA'
+        params['include_indices'] = include_indices
         source_mappings: dict[str, Any] = copy.deepcopy(sectmap)
 
         params = NorgateExtract.get_norgate_tickers(params=params)
@@ -306,6 +402,15 @@ class _DataFetch:
             'ticker_short_name_dict': params['ticker_short_name_dict'],
             'init_ticker_dict': params['init_ticker_dict'],
         }
+
+        if include_indices:
+            source_metadata.update({
+                'index_tickers': params['index_tickers'],
+                'index_ticker_name_dict': params['index_ticker_name_dict'],
+                'index_ticker_short_name_dict': params['index_ticker_short_name_dict'],
+                'init_index_ticker_dict': params['init_index_ticker_dict'],
+                'index_price_history': tables['raw_index_ticker_dict'],
+            })
 
         return source_metadata, tables['raw_ticker_dict'], source_mappings
 
@@ -337,6 +442,9 @@ class TrendBatch:
     mkts : int
         Number of markets for bar and market chart panels, applied
         uniformly across all runs.
+    include_indices : bool, optional
+        Whether to build the index files, labelled with the 'I' prefix. The
+        default is False.
     """
 
     def __init__(
@@ -345,11 +453,13 @@ class TrendBatch:
         cob_date: str,
         output_root: Path,
         mkts: int,
+        include_indices: bool = False,
     ) -> None:
         self._output_dir: Path = output_root / cob_date
         self._output_dir.mkdir(parents=True, exist_ok=True)
         self._mkts: int = mkts
         self.cob_date: str = cob_date
+        self._include_indices: bool = include_indices
 
         yahoo_runs: dict[str, dict[str, str | int]] = {
             k: v for k, v in batch_config.items() if v['source'] == 'yahoo'
@@ -389,10 +499,16 @@ class TrendBatch:
             max_lookback,
         )
 
-        fetch = _DataFetch.yahoo if source == 'yahoo' else _DataFetch.norgate
-        source_metadata, full_price_history, source_mappings = fetch(
-            mkts=self._mkts, max_lookback=max_lookback
-        )
+        if source == 'yahoo':
+            source_metadata, full_price_history, source_mappings = _DataFetch.yahoo(
+                mkts=self._mkts, max_lookback=max_lookback
+            )
+        else:
+            source_metadata, full_price_history, source_mappings = _DataFetch.norgate(
+                mkts=self._mkts,
+                max_lookback=max_lookback,
+                include_indices=self._include_indices,
+            )
 
         for label, run_config in runs.items():
             days: int = int(run_config['days'])
@@ -408,9 +524,33 @@ class TrendBatch:
                     full_price_history=full_price_history,
                     source_mappings=source_mappings,
                     output_dir=self._output_dir,
+                    last_run=label == list(runs)[-1],
                 )
             except Exception:
                 logger.exception("%s run '%s' failed.", source.capitalize(), label)
+
+        # Index run paired with each Norgate run, over the same lookback
+        if source == 'norgate' and self._include_indices:
+            for label, run_config in runs.items():
+                days = int(run_config['days'])
+                index_label, index_metadata, index_price_history = _index_run_inputs(
+                    label=label, source_metadata=source_metadata
+                )
+                logger.info("Norgate index run '%s': days=%d.", index_label, days)
+                try:
+                    _execute_run(
+                        label=index_label,
+                        days=days,
+                        source=source,
+                        mkts=self._mkts,
+                        cob_date=self.cob_date,
+                        source_metadata=index_metadata,
+                        full_price_history=index_price_history,
+                        source_mappings=source_mappings,
+                        output_dir=self._output_dir,
+                    )
+                except Exception:
+                    logger.exception("Norgate index run '%s' failed.", index_label)
 
 
 # ---------------------------------------------------------------------------
@@ -439,6 +579,9 @@ class TrendBatchParallel:
     max_workers : int, optional
         Maximum number of worker processes per source phase. The default
         is 5.
+    include_indices : bool, optional
+        Whether to build the index files, labelled with the 'I' prefix. The
+        default is False.
     """
 
     def __init__(
@@ -446,14 +589,16 @@ class TrendBatchParallel:
         batch_config: dict[str, dict[str, str | int]],
         cob_date: str,
         output_root: Path,
-        mkts: int,        
+        mkts: int,
         max_workers: int = 5,
+        include_indices: bool = False,
     ) -> None:
         self._output_dir: Path = output_root / cob_date
         self._output_dir.mkdir(parents=True, exist_ok=True)
         self._mkts: int = mkts
         self.cob_date : str = cob_date
         self._max_workers: int = max_workers
+        self._include_indices: bool = include_indices
 
         yahoo_runs: dict[str, dict[str, str | int]] = {
             k: v for k, v in batch_config.items() if v['source'] == 'yahoo'
@@ -493,10 +638,16 @@ class TrendBatchParallel:
             max_lookback,
         )
 
-        fetch = _DataFetch.yahoo if source == 'yahoo' else _DataFetch.norgate
-        source_metadata, full_price_history, source_mappings = fetch(
-            mkts=self._mkts, max_lookback=max_lookback
-        )
+        if source == 'yahoo':
+            source_metadata, full_price_history, source_mappings = _DataFetch.yahoo(
+                mkts=self._mkts, max_lookback=max_lookback
+            )
+        else:
+            source_metadata, full_price_history, source_mappings = _DataFetch.norgate(
+                mkts=self._mkts,
+                max_lookback=max_lookback,
+                include_indices=self._include_indices,
+            )
 
         with ProcessPoolExecutor(max_workers=self._max_workers) as executor:
             futures = {
@@ -511,9 +662,29 @@ class TrendBatchParallel:
                     full_price_history=full_price_history,
                     source_mappings=source_mappings,
                     output_dir=self._output_dir,
+                    last_run=label == list(runs)[-1],
                 ): label
                 for label, run_config in runs.items()
             }
+
+            # Index run paired with each Norgate run, over the same lookback
+            if source == 'norgate' and self._include_indices:
+                for label, run_config in runs.items():
+                    index_label, index_metadata, index_price_history = _index_run_inputs(
+                        label=label, source_metadata=source_metadata
+                    )
+                    futures[executor.submit(
+                        _execute_run,
+                        label=index_label,
+                        days=int(run_config['days']),
+                        source=source,
+                        mkts=self._mkts,
+                        cob_date=self.cob_date,
+                        source_metadata=index_metadata,
+                        full_price_history=index_price_history,
+                        source_mappings=source_mappings,
+                        output_dir=self._output_dir,
+                    )] = index_label
 
             for future in as_completed(futures):
                 label = futures[future]

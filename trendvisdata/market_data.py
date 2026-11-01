@@ -29,6 +29,12 @@ class NorgateExtract():
             Returns a list of ticker codes.
         init_ticker_dict : Dict
             Dictionary of ticker-security name pairs
+        index_tickers : List
+            World Indices and Forex Spot ticker codes, where include_indices
+            is True.
+        init_index_ticker_dict : Dict
+            Dictionary of index ticker-security name pairs, where
+            include_indices is True.
 
         """
 
@@ -76,6 +82,41 @@ class NorgateExtract():
         params['tickers'] = tickers
         params['init_ticker_dict'] = init_ticker_dict
 
+        if params['include_indices']:
+
+            # Create empty dictionary to store index tickers
+            init_index_ticker_dict = {}
+
+            # Specify Norgate World Indices database and extract data
+            databasename = 'World Indices'
+            databasecontents = norgatedata.database(databasename)
+
+            # For each dictionary in the data extract
+            for dicto in databasecontents:
+
+                # Add the symbol and security name to the index ticker dict as
+                # a key-value pair
+                key = dicto['symbol']
+                value = dicto['securityname']
+                init_index_ticker_dict[key] = value
+
+            # Specify Norgate Forex Spot database and extract data
+            databasename = 'Forex Spot'
+            databasecontents = norgatedata.database(databasename)
+
+            # For each dictionary in the data extract
+            for dicto in databasecontents:
+
+                # Add the symbol and security name to the index ticker dict as
+                # a key-value pair
+                key = dicto['symbol']
+                value = dicto['securityname']
+                init_index_ticker_dict[key] = value
+
+            # Convert the index ticker dict keys into a list
+            params['index_tickers'] = list(init_index_ticker_dict.keys())
+            params['init_index_ticker_dict'] = init_index_ticker_dict
+
         return params
 
 
@@ -102,11 +143,20 @@ class NorgateExtract():
         tables : Dict
             raw_ticker_dict : Dict
                 Dictionary of price history DataFrames, one for each ticker.
+            raw_index_ticker_dict : Dict
+                Dictionary of price history DataFrames, one for each index
+                ticker, where include_indices is True.
         params : Dict
             ticker_name_dict : Dict
                 Dictionary mapping ticker to long name for each ticker.
             ticker_short_name_dict : Dict
                 Dictionary mapping ticker to short name for each ticker.
+            index_ticker_name_dict : Dict
+                Dictionary mapping index ticker to long name, where
+                include_indices is True.
+            index_ticker_short_name_dict : Dict
+                Dictionary mapping index ticker to short name, where
+                include_indices is True.
         mappings : Dict
             Dictionary of sector mappings
 
@@ -157,6 +207,44 @@ class NorgateExtract():
 
             #except:
             #    params['ticker_short_name_dict'][lowtick] = ticker_name
+
+        if params['include_indices']:
+
+            # Create empty dictionaries for the index data
+            tables['raw_index_ticker_dict'] = {}
+            params['index_ticker_name_dict'] = {}
+            params['index_ticker_short_name_dict'] = {}
+
+            # Loop through list of index tickers
+            for ticker in params['index_tickers']:
+
+                # Append character to each ticker to represent its type and
+                # create lowercase value
+                tick = params['ticker_types'][ticker[0]]+ticker[1:]
+                lowtick = tick.lower()
+
+                # Extract each DataFrame, storing as a key-value pair in
+                # raw_index_ticker_dict
+                try:
+                    data = norgatedata.price_timeseries(
+                        ticker, start_date=params['start_date'],
+                        end_date=params['end_date'],
+                        format=timeseriesformat,)
+
+                    if type(data) == pd.DataFrame:
+                        data = data[['Open', 'High', 'Low', 'Close']]
+
+                        tables['raw_index_ticker_dict'][lowtick] = data
+
+                        # Extract the security name and store in
+                        # index_ticker_name_dict and index_ticker_short_name_dict
+                        ticker_name = norgatedata.security_name(ticker)
+                        params['index_ticker_name_dict'][lowtick] = ticker_name
+                        params['index_ticker_short_name_dict'][
+                            lowtick] = ticker_name.partition(" Continuous")[0]
+
+                except IndexError:
+                    print('Error importing : ', ticker)
 
         # Create sector mappings DataFrame
         mappings['sector_mappings_df'] = cls._commodity_sector_mappings(
@@ -213,6 +301,52 @@ class NorgateExtract():
                 }
 
         return yield_time_series
+
+
+    @staticmethod
+    def import_norgate_benchmarks(params: dict) -> dict:
+        """
+        Return closing levels for each Norgate equity benchmark series.
+
+        Parameters
+        ----------
+        params : Dict
+            equity_benchmarks : List
+                Norgate symbols of the benchmark series.
+            start_date : Str
+                Start date of the history.
+            end_date : Str
+                End date of the history.
+
+        Returns
+        -------
+        benchmark_series : Dict
+            Dictionary keyed by Norgate symbol of {'label': security name,
+            'data': {date: closing level}}.
+
+        """
+        benchmark_series = {}
+
+        for symbol in params['equity_benchmarks']:
+            data = norgatedata.price_timeseries(
+                symbol, start_date=params['start_date'],
+                end_date=params['end_date'],
+                format='pandas-dataframe',)
+
+            if isinstance(data, pd.DataFrame) and len(data) > 0:
+                closes = data['Close'].dropna()
+                benchmark_series[symbol] = {
+                    'label': norgatedata.security_name(symbol),
+                    'data': {
+                        day: round(float(value), 4)
+                        for day, value in zip(
+                            pd.to_datetime(closes.index).strftime('%Y-%m-%d'),
+                            closes,
+                        )
+                    },
+                }
+
+        return benchmark_series
 
 
     @staticmethod

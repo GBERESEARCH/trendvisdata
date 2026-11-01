@@ -285,6 +285,50 @@ sectmap = {
         '$SPGSCITR':('Commodities', 'Commodities', 'Commodities', 'Commodities', 'Benchmark'), # S&P GSCI Total Return Index
         '$SPGSEW':('Commodities', 'Commodities', 'Commodities', 'Commodities', 'Benchmark'), # S&P GSCI Select Equal Weight Spot Index
         '$SPGSEWTR':('Commodities', 'Commodities', 'Commodities', 'Commodities', 'Benchmark'), # S&P GSCI Select Equal Weight Total Return Index
+                '#DJIXAU':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Dow/Gold Ratio'), # Dow/Gold Ratio
+        '$BVSP':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Bovespa'), # Bovespa Index
+        '$CAC':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'CAC 40'), # CAC 40 Index
+        '$COMP':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Nasdaq Composite'), # Nasdaq Composite Index
+        '$DAX':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'DAX'), # DAX (Deutscher Aktienindex) Index
+        '$DJI':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Dow Jones Industrial Average'), # Dow Jones Industrial Average
+        '$E3X':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'FTSEurofirst 300'), # FTSEurofirst 300 Index
+        '$FT100':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'FTSE 100'), # FTSE 100 Index
+        '$FTSEMIB':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'FTSE MIB'), # FTSE MIB Index
+        '$HS':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Hang Seng'), # Hang Seng Index
+        '$IBEX':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'IBEX 35'), # IBEX 35 Index
+        '$KO':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'KOSPI 200'), # KOSPI 200 Index
+        '$MID':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'S&P MidCap 400'), # S&P MidCap 400 Index
+        '$MXX':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Mexico IPC'), # Mexico IPC Index
+        '$N225':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Nikkei 225'), # Nikkei 225 Index
+        '$NDX':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Nasdaq-100'), # Nasdaq-100 Index
+        '$NIF':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Nifty 50'), # CNX Nifty Index
+        '$NYA':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'NYSE Composite'), # NYSE Composite Index
+        '$OEX':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'S&P 100'), # S&P 100 Index
+        '$OMNX40':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'OMX Nordic 40'), # OMX Nordic 40 Index
+        '$OOI':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'S&P Global 100'), # S&P Global 100 Index
+        '$RTS':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'RTS'), # Russian Trading System Index
+        '$RUI':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Russell 1000'), # Russell 1000 Index
+        '$RUT':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Russell 2000'), # Russell 2000 Index
+        '$SEN':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'BSE SENSEX'), # BSE SENSEX 30 Index
+        '$SIMSCI':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'MSCI Singapore'), # MSCI Singapore Index
+        '$SMI':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Swiss Market Index'), # Swiss Market Index
+        '$SPTSX':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'S&P/TSX Composite'), # S&P/TSX Composite Index
+        '$SPTSX60':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'S&P/TSX 60'), # S&P/TSX 60 Index
+        '$SPX':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'S&P 500'), # S&P 500 Index
+        '$SPXTR':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'S&P 500 Total Return'), # S&P 500 Total Return Index
+        '$SSEC':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Shanghai Composite'), # Shanghai Stock Exchange Composite Index
+        '$STI':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Straits Times'), # Straits Times Index
+        '$STOXX50':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Euro STOXX 50'), # Euro STOXX 50 Index
+        '$TDX':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'TecDAX'), # TecDAX Index
+        '$TWMSCI':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'MSCI Taiwan'), # MSCI Taiwan Index
+        '$VIX':('Volatility', 'Volatility', 'Volatility', 'Volatility', 'Cboe Volatility Index'), # Cboe Volatility Index
+        '$W1DOW':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Dow Jones Global'), # Dow Jones Global Index
+        '$W2DOW':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Dow Jones Global ex-US'), # Dow Jones Global ex-U.S. Index
+        '$XIN0':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'FTSE China 50'), # FTSE China 50 Index
+        '$XIN9':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'FTSE China A50'), # FTSE China A50 Index
+        '$XJO':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'S&P/ASX 200'), # S&P/ASX 200 Index
+        '$ZADOW':('Equity Indices', 'Equity Indices','Equity Indices','Equity Indices', 'Dow Jones South Africa'), # Dow Jones South Africa Index
+        '$USDX':('Currencies', 'G10 Currencies', 'G10 Currencies', 'G10 Currencies', 'Benchmark'), # US Dollar Index
         '@AA':('Commodities', 'Metals', 'Industrial Metals', 'Industrial Metals', 'Aluminium'), # Aluminium Alloy - LME Official Cash
         '@AA03S':('Commodities', 'Metals', 'Industrial Metals', 'Industrial Metals', 'Aluminium'), # Aluminium Alloy - LME 03 Months Seller
         '@AAWS':('Commodities', 'Metals', 'Industrial Metals', 'Industrial Metals', 'Aluminium'), # Aluminium Alloy - LME Warehouse Opening Stocks

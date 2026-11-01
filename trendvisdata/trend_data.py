@@ -671,7 +671,13 @@ class TrendRank():
         if params['source'] == 'norgate':
             # Split the continuous futures data
             tables = cls._futures_split(tables=tables, params=params)
-            barometer = copy.deepcopy(tables['futures_barometer'])
+
+            # Use the continuous futures where the run contains any;
+            # otherwise the full barometer
+            if len(tables['futures_barometer']) > 0:
+                barometer = copy.deepcopy(tables['futures_barometer'])
+            else:
+                barometer = copy.deepcopy(tables['barometer'])
         else:
             barometer = copy.deepcopy(tables['barometer'])
 
